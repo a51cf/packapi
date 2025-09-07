@@ -1,35 +1,26 @@
 <div align="center">
+<h1><img src=".github/packapi.png" alt="Pack API" width="100%" /></h1>
 
-<h1>Pack 📦 API</h1>
-
-```bash
-composer req smnandre/packapi
-```
-
-&nbsp; ![PHP Version](https://img.shields.io/badge/PHP-8.3+-2e7d32?logoColor=6AB76E&labelColor=010)
-&nbsp; ![CI](https://img.shields.io/github/actions/workflow/status/smnandre/packapi/CI.yaml?branch=main&label=Tests&logoColor=white&logoSize=auto&labelColor=010&color=388e3c)
-&nbsp; ![Release](https://img.shields.io/github/v/release/smnandre/packapi?label=Stable&logoColor=white&logoSize=auto&labelColor=010&color=43a047)
-&nbsp; [![GitHub Sponsors](https://img.shields.io/github/sponsors/smnandre?logo=github-sponsors&logoColor=66bb6a&logoSize=auto&label=%20Sponsor&labelColor=010&color=a5d6a7)](https://github.com/sponsors/smnandre)
-&nbsp; ![License](https://img.shields.io/github/license/smnandre/packapi?label=License&logoColor=white&logoSize=auto&labelColor=010&color=2e7d32)
+&nbsp; ![PHP Version](https://img.shields.io/badge/PHP-8.3+-7A8593?logoColor=7A8593&labelColor=161406)
+&nbsp; ![CI](https://img.shields.io/github/actions/workflow/status/smnandre/packapi/CI.yaml?branch=main&label=Tests&labelColor=161406&color=7A8593)
+&nbsp; ![Release](https://img.shields.io/github/v/release/smnandre/packapi?label=Stable&labelColor=161406&color=7A8593)
+&nbsp; [![GitHub Sponsors](https://img.shields.io/github/sponsors/smnandre?logo=githubsponsors&logoColor=7A8593&label=%20Sponsor&labelColor=161406&color=7A8593)](https://github.com/sponsors/smnandre)
+&nbsp; ![License](https://img.shields.io/github/license/smnandre/packapi?label=License&labelColor=161406&color=7A8593)
 
 </div>
 
-
-**PackAPI** is a small and extensible PHP library for analyzing Open Source packages across multiple ecosystems. 
-
-Get comprehensive insights about **Composer**, **NPM**, **GitHub repositories**, and more through a unified, strongly-typed API.
+Get insights from **Composer**, **NPM**, **GitHub**, and more via a unified, strongly‑typed API.
 
 
 ## Features
 
-- **Multi-Ecosystem Support**: Composer, NPM, GitHub, jsDelivr, OSV Security Database, BundlePhobia
-- **Rich Package Analytics**: Metadata, download stats, security advisories, project activity, quality scoring
-- **Security-First**: Built-in security advisory scanning and vulnerability detection
-- **Fully Tested**: 334+ tests with comprehensive coverage
-- **Type-Safe**: Strict typing throughout with PHP 8.3+ features
-- **Extensible**: Plugin architecture for adding new package sources
-- **Minimal Dependencies**: Built on Symfony components and PSR interfaces
-- **HTTP/3 (QUIC) Ready**: Modern networking with fallback to HTTP/2/1.1
+- **Multi‑ecosystem**: Composer, NPM, GitHub, jsDelivr, OSV, BundlePhobia
+- **Analyses**: Metadata, downloads, security, activity, quality
+- **Strong typing**: PHP 8.3+ with strict types
+- **Extensible**: Provider/factory architecture
+- **Well‑tested**: Extensive automated test suite
+- **Lean deps**: Symfony components and PSR interfaces
+- **HTTP/3 (QUIC)** support with graceful fallback
 
 ## Quick Start
 
@@ -42,24 +33,30 @@ composer require smnandre/packapi
 ### Basic Usage
 
 ```php
-use PackApi\Builder\PackApiBuilder;
+use PackApi\Bridge\Packagist\PackagistProviderFactory;
+use PackApi\Http\HttpClientFactory;
+use PackApi\Inspector\{MetadataInspector, DownloadStatsInspector};
 use PackApi\Package\ComposerPackage;
 
-// Create the analyzer
-$packApi = (new PackApiBuilder())
-    ->withGitHubToken($_ENV['GITHUB_TOKEN'] ?? null) // Optional: for higher rate limits
-    ->build();
+$http = new HttpClientFactory();
+$packagist = new PackagistProviderFactory($http);
 
-// Analyze any package
+$metadata = new MetadataInspector([
+    $packagist->createMetadataProvider(),
+]);
+$downloads = new DownloadStatsInspector([
+    $packagist->createStatsProvider(),
+]);
+
 $package = new ComposerPackage('symfony/console');
-$analysis = $packApi->analyze($package);
+$meta = $metadata->getMetadata($package);
+$stats = $downloads->getStats($package);
 
-// Get comprehensive data
-echo "Package: " . $analysis['metadata']->getName() . "\n";
-echo "Downloads: " . $analysis['downloads']->get('monthly')?->getCount() . "\n";
-echo "Quality Grade: " . $analysis['quality']->getGrade() . "\n";
-echo "Security Issues: " . count($analysis['security']) . "\n";
+echo 'Package: '.($meta?->name ?? 'N/A')."\n";
+echo 'Monthly downloads: '.($stats?->get('monthly')?->getCount() ?? 'N/A')."\n";
 ```
+
+For activity, content, quality, and OSV security, add the relevant provider factories (GitHub, jsDelivr, OSV) and pass them to the corresponding inspectors.
 
 ## Supported Package Types
 
@@ -165,22 +162,17 @@ $inspector = new ContentInspector([
 $content = $inspector->getContentOverview($package);
 
 echo "Files: " . $content->getFileCount() . "\n";
-echo "Total size: " . $content->getHumanSize() . "\n";
+echo "Total size: " . number_format($content->getTotalSize()) . " bytes\n";
 echo "Has README: " . ($content->hasReadme() ? 'Yes' : 'No') . "\n";
 echo "Has tests: " . ($content->hasTests() ? 'Yes' : 'No') . "\n";
-
-// List largest files
-foreach ($content->getLargestFiles(5) as $file) {
-    echo "FILE: {$file->getPath()}: {$file->getHumanSize()}\n";
-}
 ```
 
 ### Bundle Size Analysis (NPM)
 
 ```php
 use PackApi\Bridge\BundlePhobia\BundlePhobiaProviderFactory;
-
-$factory = new BundlePhobiaProviderFactory($httpClient);
+$httpFactory = new HttpClientFactory();
+$factory = new BundlePhobiaProviderFactory($httpFactory);
 $sizeProvider = $factory->createBundleSizeProvider();
 
 $package = new NpmPackage('lodash');
@@ -195,9 +187,9 @@ if ($bundleSize) {
 
 ## Configuration
 
-### HTTP/3 (QUIC) Support
+### HTTP/3 (QUIC)
 
-PackAPI supports HTTP/3 for improved performance:
+PackApi supports HTTP/3 for improved performance:
 
 ```php
 use PackApi\Http\HttpClientFactory;
@@ -210,47 +202,27 @@ $client = $httpFactory->createClient([
 
 ### Caching
 
-Add caching for better performance:
-
-```php
-use Symfony\Component\Cache\Adapter\FilesystemAdapter;
-
-$cache = new FilesystemAdapter('packapi', 3600); // 1 hour TTL
-
-$packApi = (new PackApiBuilder())
-    ->useCache($cache)
-    ->build();
-```
+Enable HTTP caching at the Symfony HTTP client level (e.g., `CachingHttpClient` with an HttpKernel `Store`). PackApi does not require a separate configuration object.
 
 ### Logging
 
-Enable request logging for debugging:
-
-```php
-use Psr\Log\LoggerInterface;
-
-$packApi = (new PackApiBuilder())
-    ->withLogger($logger)
-    ->build();
-```
+Pass a PSR‑3 logger to `HttpClientFactory` to log outgoing requests in examples and providers.
 
 ### GitHub Authentication
 
-For higher rate limits, provide a GitHub token:
+For higher GitHub rate limits, provide a token:
 
 ```php
 // Via environment variable
 $_ENV['GITHUB_TOKEN'] = 'ghp_your_token_here';
 
-// Or directly
-$packApi = (new PackApiBuilder())
-    ->withGitHubToken('ghp_your_token_here')
-    ->build();
+// Pass the token to GitHubProviderFactory when creating providers
+// $github = new GitHubProviderFactory($httpFactory, $_ENV['GITHUB_TOKEN'] ?? null);
 ```
 
 ## Architecture
 
-PackAPI uses a clean, extensible architecture:
+PackApi uses a clean, extensible architecture:
 
 ### Core Components
 
@@ -262,21 +234,21 @@ PackAPI uses a clean, extensible architecture:
 
 ### Provider Pattern
 
+Each inspector accepts one or more providers from the corresponding factory. Providers are tried in order until one succeeds.
+
 ```php
-// Each inspector can have multiple providers
-$securityInspector = new SecurityInspector([
-    new OSVSecurityProvider($httpClient),          // OSV Database  
-    new GitHubSecurityProvider($httpClient),       // GitHub Advisories
-    new PackagistSecurityProvider($httpClient)     // Packagist Security
+$security = new SecurityInspector([
+    $osvFactory->createSecurityProvider(),
+    $githubFactory->createSecurityProvider(),
+    $packagistFactory->createSecurityProvider(),
 ]);
 
-// Providers are tried in order until one succeeds
-$advisories = $securityInspector->getSecurityAdvisories($package);
+$advisories = $security->getSecurityAdvisories($package);
 ```
 
 ## Testing
 
-PackAPI has comprehensive test coverage:
+PackApi has comprehensive test coverage:
 
 ```bash
 # Run tests
@@ -290,6 +262,25 @@ composer cs
 
 # Fix code style
 composer cs-fix
+```
+
+## Examples
+
+Run the sample scripts in `examples/` to try PackApi quickly:
+
+- `examples/metadata-analysis.php`: print package metadata
+- `examples/download-stats-analysis.php`: print download periods
+- `examples/content-analysis.php`: analyze files and flags
+- `examples/activity-analysis.php`: summarize repo activity (set `GITHUB_TOKEN` for richer data)
+- `examples/security-analysis.php`: list security advisories (OSV/GitHub)
+- `examples/bundlephobia-size.php`: show NPM bundle sizes
+- `examples/all-analysis.php`: run a combined analysis with sensible fallbacks
+
+Usage:
+
+```bash
+php examples/metadata-analysis.php
+php examples/all-analysis.php
 ```
 
 ### Adding New Providers
