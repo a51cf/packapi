@@ -17,7 +17,6 @@ use PackApi\Bridge\GitHub\GitHubProviderFactory;
 use PackApi\Bridge\JsDelivr\JsDelivrProviderFactory;
 use PackApi\Bridge\OSV\OSVProviderFactory;
 use PackApi\Bridge\Packagist\PackagistProviderFactory;
-use PackApi\Config\Configuration;
 use PackApi\Http\HttpClientFactory;
 use PackApi\Inspector\ActivityInspector;
 use PackApi\Inspector\ContentInspector;
@@ -33,7 +32,6 @@ echo "==============================\n\n";
 // Setup
 $httpFactory = new HttpClientFactory();
 $httpClient = $httpFactory->createClient();
-$config = new Configuration();
 
 // Create provider factories
 $packagistFactory = new PackagistProviderFactory($httpFactory);
@@ -48,14 +46,20 @@ $metadataInspector = new MetadataInspector([
     $githubFactory->createMetadataProvider(),
 ]);
 $activityInspector = new ActivityInspector([
+    // Try GitHub first for richer activity
     $githubFactory->createActivityProvider(),
+    // Fallback to Packagist release activity if GitHub fails/unavailable
+    $packagistFactory->createActivityProvider(),
 ]);
 $downloadStatsInspector = new DownloadStatsInspector([
     $packagistFactory->createStatsProvider(),
     $jsdelivrFactory->createStatsProvider(),
 ]);
 $contentInspector = new ContentInspector([
+    // Try GitHub contents API first
     $githubFactory->createContentProvider(),
+    // Fallback to Packagist archive analysis when GitHub is unavailable
+    $packagistFactory->createContentProvider(),
 ]);
 $qualityInspector = new QualityInspector(
     $contentInspector,
@@ -66,12 +70,11 @@ $securityInspector = new SecurityInspector([
 ]);
 
 // Analyze symfony/ux-live-component package
-$package = new ComposerPackage('symfony/ux-live-component');
+$package = new ComposerPackage('symfony/maker-bundle');
 
 echo "Analyzing package: {$package->getName()}\n";
 echo "Package identifier: {$package->getIdentifier()}\n\n";
 
-// Metadata Analysis
 echo "--- Metadata Analysis ---\n";
 try {
     $metadata = $metadataInspector->getMetadata($package);
@@ -93,7 +96,6 @@ try {
 }
 echo "\n";
 
-// Activity Analysis
 echo "--- Activity Analysis ---\n";
 try {
     $activity = $activityInspector->getActivitySummary($package);
@@ -102,15 +104,15 @@ try {
     } else {
         echo "✅ Activity summary found!\n";
         echo '  Last Commit: '.($activity->lastCommit ? $activity->lastCommit->format('Y-m-d H:i:s') : 'N/A')."\n";
-        echo '  Open Issues: '.($activity->openIssues ?? 'N/A')."\n";
-        echo '  Open Pull Requests: '.($activity->openPullRequests ?? 'N/A')."\n";
+        echo '  Contributors: '.number_format($activity->contributors)."\n";
+        echo '  Open Issues: '.number_format($activity->openIssues)."\n";
+        echo '  Last Release: '.($activity->lastRelease ?? 'N/A')."\n";
     }
 } catch (Exception $e) {
     echo "❌ Error during activity analysis: {$e->getMessage()}\n";
 }
 echo "\n";
 
-// Download Stats Analysis
 echo "--- Download Stats Analysis ---\n";
 try {
     $downloadStats = $downloadStatsInspector->getStats($package);
@@ -127,7 +129,6 @@ try {
 }
 echo "\n";
 
-// Content Analysis
 echo "--- Content Analysis ---\n";
 try {
     $contentOverview = $contentInspector->getContentOverview($package);
@@ -135,16 +136,16 @@ try {
         echo "❌ No content overview found.\n";
     } else {
         echo "✅ Content overview found!\n";
-        echo '  Total Files: '.($contentOverview->totalFiles ?? 'N/A')."\n";
-        echo '  Total Lines: '.($contentOverview->totalLines ?? 'N/A')."\n";
-        echo '  Languages: '.implode(', ', array_keys($contentOverview->languages ?? []))."\n";
+        echo '  File Count: '.number_format($contentOverview->fileCount)."\n";
+        echo '  Total Size: '.number_format($contentOverview->totalSize)." bytes\n";
+        echo '  Has README: '.($contentOverview->hasReadme ? 'Yes' : 'No')."\n";
+        echo '  Has License: '.($contentOverview->hasLicense ? 'Yes' : 'No')."\n";
     }
 } catch (Exception $e) {
     echo "❌ Error during content analysis: {$e->getMessage()}\n";
 }
 echo "\n";
 
-// Quality Analysis
 echo "--- Quality Analysis ---\n";
 try {
     $qualityScore = $qualityInspector->getQualityScore($package);
@@ -152,16 +153,19 @@ try {
         echo "❌ No quality score found.\n";
     } else {
         echo "✅ Quality score found!\n";
-        echo '  Score: '.($qualityScore->score ?? 'N/A')."\n";
-        echo '  Popularity: '.($qualityScore->popularity ?? 'N/A')."\n";
-        echo '  Maintenance: '.($qualityScore->maintenance ?? 'N/A')."\n";
+        echo '  Score: '.number_format($qualityScore->score / 10, 1)."/10\n";
+        if ($qualityScore->grade) {
+            echo '  Grade: '.$qualityScore->grade."\n";
+        }
+        if ($qualityScore->comment) {
+            echo '  Comment: '.$qualityScore->comment."\n";
+        }
     }
 } catch (Exception $e) {
     echo "❌ Error during quality analysis: {$e->getMessage()}\n";
 }
 echo "\n";
 
-// Security Analysis
 echo "--- Security Analysis ---\n";
 try {
     $securityAdvisories = $securityInspector->getSecurityAdvisories($package);

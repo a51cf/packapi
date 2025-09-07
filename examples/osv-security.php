@@ -14,18 +14,15 @@ declare(strict_types=1);
 require_once __DIR__.'/../vendor/autoload.php';
 
 use PackApi\Bridge\OSV\OSVProviderFactory;
-use PackApi\Config\Configuration;
 use PackApi\Http\HttpClientFactory;
 use PackApi\Package\ComposerPackage;
 use PackApi\Package\NpmPackage;
 
 // Create HTTP client and factory
 $httpFactory = new HttpClientFactory();
-$httpClient = $httpFactory->createClient();
-$config = new Configuration();
 
 // Create OSV factory
-$osvFactory = new OSVProviderFactory($httpClient, $config);
+$osvFactory = new OSVProviderFactory($httpFactory);
 $securityProvider = $osvFactory->createSecurityProvider();
 
 // Test with a NPM package known to have vulnerabilities
@@ -55,8 +52,8 @@ if ($securityProvider->supports($npmPackage)) {
 }
 
 // Test with a Composer package
-echo "\n=== OSV Security Analysis for Composer Package 'symfony/ux-icons' ===\n\n";
-$composerPackage = new ComposerPackage('symfony/ux-icons');
+echo "\n=== OSV Security Analysis for Composer Package 'symfony/maker-bundle' ===\n\n";
+$composerPackage = new ComposerPackage('symfony/maker-bundle');
 
 if ($securityProvider->supports($composerPackage)) {
     $advisories = $securityProvider->getSecurityAdvisories($composerPackage);
@@ -74,7 +71,7 @@ if ($securityProvider->supports($composerPackage)) {
             );
         }
     } else {
-        echo "No vulnerabilities found for symfony/ux-icons package.\n";
+        echo "No vulnerabilities found for symfony/maker-bundle package.\n";
     }
 } else {
     echo "Package type not supported by OSV provider.\n";

@@ -13,9 +13,7 @@ declare(strict_types=1);
 
 require_once __DIR__.'/../vendor/autoload.php';
 
-use PackApi\Bridge\GitHub\GitHubProviderFactory;
 use PackApi\Bridge\Packagist\PackagistProviderFactory;
-use PackApi\Config\Configuration;
 use PackApi\Http\HttpClientFactory;
 use PackApi\Inspector\MetadataInspector;
 use PackApi\Package\ComposerPackage;
@@ -25,12 +23,9 @@ echo "===================================\n\n";
 
 // Setup
 $httpFactory = new HttpClientFactory();
-$httpClient = $httpFactory->createClient();
-$config = new Configuration();
 
-// Create provider factories (note: different factories have different constructor signatures)
-$packagistFactory = new PackagistProviderFactory($httpFactory, $config);
-$githubFactory = new GitHubProviderFactory($httpClient, $config);
+// Create provider factory
+$packagistFactory = new PackagistProviderFactory($httpFactory);
 
 // Create metadata providers
 $providers = [
@@ -40,8 +35,8 @@ $providers = [
 // Create inspector
 $inspector = new MetadataInspector($providers);
 
-// Analyze symfony/ux-icons package
-$package = new ComposerPackage('symfony/ux-icons');
+// Analyze symfony/maker-bundle package
+$package = new ComposerPackage('symfony/maker-bundle');
 
 echo "Analyzing package: {$package->getName()}\n";
 echo "Package identifier: {$package->getIdentifier()}\n\n";

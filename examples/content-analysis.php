@@ -14,7 +14,6 @@ declare(strict_types=1);
 require_once __DIR__.'/../vendor/autoload.php';
 
 use PackApi\Bridge\Packagist\PackagistProviderFactory;
-use PackApi\Config\Configuration;
 use PackApi\Http\HttpClientFactory;
 use PackApi\Inspector\ContentInspector;
 use PackApi\Package\ComposerPackage;
@@ -24,10 +23,9 @@ echo "==================================\n\n";
 
 // Setup
 $httpFactory = new HttpClientFactory();
-$config = new Configuration();
 
 // Create provider factory
-$packagistFactory = new PackagistProviderFactory($httpFactory, $config);
+$packagistFactory = new PackagistProviderFactory($httpFactory);
 
 // Create content provider
 $providers = [
@@ -37,8 +35,8 @@ $providers = [
 // Create inspector
 $inspector = new ContentInspector($providers);
 
-// Analyze symfony/ux-icons package
-$package = new ComposerPackage('symfony/ux-icons');
+// Analyze symfony/maker-bundle package
+$package = new ComposerPackage('symfony/maker-bundle');
 
 echo "Analyzing content for: {$package->getName()}\n\n";
 

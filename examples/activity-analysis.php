@@ -14,7 +14,6 @@ declare(strict_types=1);
 require_once __DIR__.'/../vendor/autoload.php';
 
 use PackApi\Bridge\Packagist\PackagistProviderFactory;
-use PackApi\Config\Configuration;
 use PackApi\Http\HttpClientFactory;
 use PackApi\Inspector\ActivityInspector;
 use PackApi\Package\ComposerPackage;
@@ -24,10 +23,9 @@ echo "===================================\n\n";
 
 // Setup
 $httpFactory = new HttpClientFactory();
-$config = new Configuration();
 
 // Create provider factory
-$packagistFactory = new PackagistProviderFactory($httpFactory, $config);
+$packagistFactory = new PackagistProviderFactory($httpFactory);
 
 // Create activity provider
 $providers = [
@@ -37,8 +35,8 @@ $providers = [
 // Create inspector
 $inspector = new ActivityInspector($providers);
 
-// Analyze symfony/ux-icons package
-$package = new ComposerPackage('symfony/ux-icons');
+// Analyze symfony/maker-bundle package
+$package = new ComposerPackage('symfony/maker-bundle');
 
 echo "Analyzing activity for: {$package->getName()}\n\n";
 
@@ -52,40 +50,15 @@ try {
 
     echo "✅ Activity analysis found!\n\n";
 
-    if (isset($activity->lastCommitDate)) {
-        echo 'Last Commit: '.$activity->lastCommitDate->format('Y-m-d H:i:s')."\n";
+    if ($activity->lastCommit) {
+        echo 'Last Commit: '.$activity->lastCommit->format('Y-m-d H:i:s')."\n";
     }
 
-    if (isset($activity->totalCommits)) {
-        echo 'Total Commits: '.number_format($activity->totalCommits)."\n";
-    }
+    echo 'Contributors: '.number_format($activity->contributors)."\n";
+    echo 'Open Issues: '.number_format($activity->openIssues)."\n";
 
-    if (isset($activity->activeContributors)) {
-        echo 'Active Contributors: '.number_format($activity->activeContributors)."\n";
-    }
-
-    if (isset($activity->averageTimeToClose)) {
-        echo 'Average Time to Close Issues: '.number_format($activity->averageTimeToClose)." days\n";
-    }
-
-    if (isset($activity->commitFrequency)) {
-        echo 'Commit Frequency: '.number_format($activity->commitFrequency, 2)." commits/day\n";
-    }
-
-    if (isset($activity->lastReleaseDate)) {
-        echo 'Last Release: '.$activity->lastReleaseDate->format('Y-m-d H:i:s')."\n";
-    }
-
-    if (isset($activity->releaseFrequency)) {
-        echo 'Release Frequency: '.number_format($activity->releaseFrequency, 2)." releases/month\n";
-    }
-
-    if (isset($activity->openIssues)) {
-        echo 'Open Issues: '.number_format($activity->openIssues)."\n";
-    }
-
-    if (isset($activity->closedIssues)) {
-        echo 'Closed Issues: '.number_format($activity->closedIssues)."\n";
+    if ($activity->lastRelease) {
+        echo 'Last Release: '.$activity->lastRelease."\n";
     }
 } catch (Exception $e) {
     echo "❌ Error: {$e->getMessage()}\n";

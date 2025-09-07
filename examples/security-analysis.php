@@ -14,7 +14,6 @@ declare(strict_types=1);
 require_once __DIR__.'/../vendor/autoload.php';
 
 use PackApi\Bridge\Packagist\PackagistProviderFactory;
-use PackApi\Config\Configuration;
 use PackApi\Http\HttpClientFactory;
 use PackApi\Inspector\SecurityInspector;
 use PackApi\Package\ComposerPackage;
@@ -24,10 +23,9 @@ echo "===================================\n\n";
 
 // Setup
 $httpFactory = new HttpClientFactory();
-$config = new Configuration();
 
 // Create provider factory
-$packagistFactory = new PackagistProviderFactory($httpFactory, $config);
+$packagistFactory = new PackagistProviderFactory($httpFactory);
 
 // Create security provider
 $providers = [
@@ -37,7 +35,7 @@ $providers = [
 // Create inspector
 $inspector = new SecurityInspector($providers);
 
-// Analyze symfony/ux-icons package
+// Analyze symfony/maker-bundle package
 $package = new ComposerPackage('symfony/ux-twig-component');
 
 echo "Analyzing security for: {$package->getName()}\n\n";
@@ -45,18 +43,16 @@ echo "Analyzing security for: {$package->getName()}\n\n";
 try {
     $advisories = $inspector->getSecurityAdvisories($package);
 
-    if (null === $advisories || empty($advisories)) {
+    if (empty($advisories)) {
         echo "✅ No security advisories found for this package (good news!)\n";
     } else {
         echo "⚠️  Security advisories found!\n\n";
 
         foreach ($advisories as $advisory) {
-            echo 'Advisory ID: '.($advisory->id ?? 'N/A')."\n";
-            echo 'Severity: '.($advisory->severity ?? 'N/A')."\n";
-            echo 'Summary: '.($advisory->summary ?? 'N/A')."\n";
-            echo 'Published: '.($advisory->publishedAt ? $advisory->publishedAt->format('Y-m-d H:i:s') : 'N/A')."\n";
-            echo 'Affected Versions: '.($advisory->affectedVersions ?? 'N/A')."\n";
-            echo 'CVE: '.($advisory->cveId ?? 'N/A')."\n";
+            echo 'Advisory ID: '.$advisory->id."\n";
+            echo 'Severity: '.$advisory->severity."\n";
+            echo 'Title: '.$advisory->title."\n";
+            echo 'Link: '.$advisory->link."\n";
             echo "---\n";
         }
     }

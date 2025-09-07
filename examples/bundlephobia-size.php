@@ -14,18 +14,15 @@ declare(strict_types=1);
 require_once __DIR__.'/../vendor/autoload.php';
 
 use PackApi\Bridge\BundlePhobia\BundlePhobiaProviderFactory;
-use PackApi\Config\Configuration;
 use PackApi\Http\HttpClientFactory;
 use PackApi\Package\ComposerPackage;
 use PackApi\Package\NpmPackage;
 
 // Create HTTP client and factory
 $httpFactory = new HttpClientFactory();
-$httpClient = $httpFactory->createClient();
-$config = new Configuration();
 
 // Create BundlePhobia factory
-$bundlePhobiaFactory = new BundlePhobiaProviderFactory($httpClient, $config);
+$bundlePhobiaFactory = new BundlePhobiaProviderFactory($httpFactory);
 $sizeProvider = $bundlePhobiaFactory->createBundleSizeProvider();
 
 // Test with a popular NPM package
@@ -104,8 +101,8 @@ if ($sizeProvider->supports($lodashPackage)) {
 }
 
 // Test with Composer package (should not be supported)
-echo "\n=== BundlePhobia Analysis for Composer Package 'symfony/ux-icons' ===\n\n";
-$composerPackage = new ComposerPackage('symfony/ux-icons');
+echo "\n=== BundlePhobia Analysis for Composer Package 'symfony/maker-bundle' ===\n\n";
+$composerPackage = new ComposerPackage('symfony/maker-bundle');
 
 if ($sizeProvider->supports($composerPackage)) {
     echo "Composer package is supported (unexpected!).\n";
