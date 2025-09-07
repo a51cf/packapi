@@ -1,11 +1,11 @@
 {
     "name": "smnandre/packapi",
     "description": "PHP library for retrieving package metadata, download statistics, security advisories, and quality metrics from Composer, NPM, GitHub, jsDelivr, and OSV databases",
-    "type": "library",
     "license": "MIT",
+    "type": "library",
     "keywords": [
         "composer",
-        "packagist", 
+        "packagist",
         "npm",
         "github",
         "jsdelivr",
@@ -32,15 +32,16 @@
     "require": {
         "php": "^8.3",
         "psr/log": "^3.0",
-        "symfony/http-client": "^7.3"
-    },
-    "suggest": {
-        "symfony/cache": "For HTTP response caching and improved performance"
+        "symfony/cache-contracts": "^3.6",
+        "symfony/http-client-contracts": "^3.6",
+        "symfony/yaml": "^7.3 || ^8.0"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.75",
+        "phpstan/phpstan": "^2.1",
         "phpunit/phpunit": "^12.1",
-        "symfony/var-dumper": "^7.2"
+        "symfony/cache": "^7.3 || ^8.0",
+        "symfony/http-client": "^7.3 || ^8.0"
     },
     "autoload": {
         "psr-4": {
