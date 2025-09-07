@@ -29,6 +29,7 @@ if (!class_exists(CachingHttpClient::class, false)) {
     class CachingHttpClient implements HttpClientInterface
     {
         private array $options;
+
         public function __construct(private HttpClientInterface $client, private $store = null, array $options = [])
         {
             $this->options = $options;
