@@ -35,9 +35,9 @@ No official limits are documented, but it is recommended to add your own rate li
 
 ```php
 use PackApi\Bridge\JsDelivr\JsDelivrProviderFactory;
-use PackApi\Http\SymfonyHttpClientFactory;
+use PackApi\Http\HttpClientFactory;
 
-$httpFactory = new SymfonyHttpClientFactory();
+$httpFactory = new HttpClientFactory();
 $factory = new JsDelivrProviderFactory($httpFactory);
 
 $statsProvider = $factory->createStatsProvider();
@@ -86,14 +86,7 @@ Transforms the `fetchFileList()` response into a `ContentOverview` with file cou
 Responses can be cached by your HTTP client implementation. The factory only sets the base URI and headers.
 
 ### **Cache Configuration**
-```php
-$config = new Configuration([
-    'cache' => [
-        'type' => 'filesystem',
-        'directory' => '/tmp/packapi-cache'
-    ]
-]);
-```
+Enable HTTP caching at the client level in your application if desired. PackApi does not require a separate configuration class.
 
 ---
 

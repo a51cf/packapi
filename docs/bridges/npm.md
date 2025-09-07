@@ -28,22 +28,8 @@ The NPM Bridge provides comprehensive integration with the NPM Registry to analy
 - **No official limits** but respectful usage recommended
 - Built-in rate limiting with `TokenBucketRateLimiter`
 
-```php
-use PackApi\Bridge\Npm\NpmProviderFactory;
-use PackApi\Config\Configuration;
-
-$config = new Configuration([
-    'cache' => [
-        'type' => 'filesystem',
-        'directory' => '/tmp/packapi-cache'
-    ],
-    'logger' => [
-        'file' => '/var/log/packapi.log'
-    ]
-]);
-
-$factory = new NpmProviderFactory($httpClient, $config);
-```
+// No global configuration class is required. Configure your HTTP client
+// via HttpClientFactory options as needed (timeouts, headers, etc.).
 
 ---
 
@@ -54,9 +40,7 @@ use PackApi\Bridge\Npm\NpmProviderFactory;
 use PackApi\Http\HttpClientFactory;
 
 $httpFactory = new HttpClientFactory();
-$httpClient = $httpFactory->createClient(['enable_quic' => true]);
-
-$factory = new NpmProviderFactory($httpClient, $config);
+$factory = new NpmProviderFactory($httpFactory);
 
 // Available provider interfaces
 $providers = $factory->provides();
@@ -80,7 +64,14 @@ $contentProvider = $factory->createContentProvider();
 ```php
 use PackApi\Bridge\Npm\NpmApiClient;
 
-$client = new NpmApiClient($httpClient, $cache, $rateLimiter, $logger);
+$http = (new HttpClientFactory())->createClient()->withOptions([
+    'base_uri' => 'https://registry.npmjs.org',
+    'headers' => [
+        'User-Agent' => 'PackApi/1.0',
+        'Accept' => 'application/json',
+    ],
+]);
+$client = new NpmApiClient($http);
 
 // Fetch package metadata
 $packageData = $client->fetchPackageInfo('lodash');
@@ -275,20 +266,7 @@ Intelligent caching with configurable backends:
 ```
 
 **Cache Backends**:
-```php
-// Filesystem cache
-$config = new Configuration([
-    'cache' => [
-        'type' => 'filesystem',
-        'directory' => '/var/cache/packapi'
-    ]
-]);
-
-// Memory cache (default)
-$config = new Configuration([
-    'cache' => ['type' => 'memory']
-]);
-```
+Configure HTTP caching at the client level in your application if needed. PackApi no longer exposes a `Configuration` class.
 
 ---
 
@@ -340,17 +318,11 @@ $httpClient = $httpFactory->createClient([
 
 ### **Batch Processing**
 ```php
-// Process multiple packages efficiently
-$packages = ['lodash', 'axios', 'express', 'react'];
-$results = [];
-
-foreach ($packages as $packageName) {
-    $package = new NpmPackage($packageName);
-    $results[$packageName] = [
-        'metadata' => $metadataProvider->getMetadata($package),
-        'stats' => $statsProvider->getStats($package),
-        'content' => $contentProvider->getContentOverview($package)
-    ];
+foreach (['lodash', 'axios', 'express', 'react'] as $name) {
+    $pkg = new NpmPackage($name);
+    $meta = $metadataProvider->getMetadata($pkg);
+    $stats = $statsProvider->getStats($pkg);
+    echo ($meta?->name ?? $name).': '.($stats?->get('monthly')?->getCount() ?? 'N/A')."\n";
 }
 ```
 
@@ -358,36 +330,10 @@ foreach ($packages as $packageName) {
 
 ## **Testing**
 
-Comprehensive test coverage with mocked API responses:
-
-```php
-use PackApi\Tests\System\Npm\NpmMetadataProviderTest;
-
-class NpmMetadataProviderTest extends TestCase
-{
-    public function testHandlesMissingFields(): void
-    {
-        $mockClient = $this->createMock(NpmApiClient::class);
-        $mockClient->method('fetchPackageInfo')
-                   ->willReturn(['name' => 'test-package']);
-        
-        $provider = new NpmMetadataProvider($mockClient);
-        $metadata = $provider->getMetadata(new NpmPackage('test-package'));
-        
-        $this->assertSame('test-package', $metadata->name);
-        $this->assertNull($metadata->description);
-        $this->assertNull($metadata->license);
-    }
-}
-```
-
-**Test Coverage**:
-- ✅ Package validation (11 test cases)
-- ✅ Metadata extraction (8 test cases)
-- ✅ Content analysis (10 test cases)
-- ✅ Download stats (pending implementation)
+Use Symfony's `MockHttpClient` to simulate responses, or mock providers directly. Keep tests focused on typed models and provider behavior.
 
 ---
+
 
 ## **NPM Registry Documentation**
 
@@ -411,23 +357,12 @@ class NpmMetadataProviderTest extends TestCase
 
 ### **Package Comparison**
 ```php
-$packages = ['lodash', 'underscore', 'ramda'];
-$comparison = [];
-
-foreach ($packages as $name) {
+foreach (['lodash', 'underscore', 'ramda'] as $name) {
     $pkg = new NpmPackage($name);
-    $metadata = $metadataProvider->getMetadata($pkg);
+    $meta = $metadataProvider->getMetadata($pkg);
     $stats = $statsProvider->getStats($pkg);
-    
-    $comparison[$name] = [
-        'description' => $metadata->description,
-        'license' => $metadata->license,
-        'downloads' => $stats->getTotal(),
-        'size' => $contentProvider->getContentOverview($pkg)->totalSize
-    ];
+    echo ($meta?->name ?? $name).': '.($meta?->license ?? 'N/A').', '.number_format($stats?->get('monthly')?->getCount() ?? 0)."\n";
 }
-
-print_r($comparison);
 ```
 
 ### **Popular Package Analysis**

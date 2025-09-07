@@ -6,7 +6,7 @@ PackApi includes a dedicated security inspection component used to gather vulner
 ## Security Inspector
 
 ### Configuration
-The inspector is configured through the main `Configuration` object. Here you can enable caching, adjust provider options and tune rate limits for external services.
+There is no global configuration class. Compose the `SecurityInspector` with providers created via their factories (e.g., Packagist, OSV, GitHub). Configure HTTP behavior via `HttpClientFactory` options and environment variables (e.g., `GITHUB_TOKEN`).
 
 ### Provider Registration
 All security providers implement `SecurityProviderInterface`. They are automatically registered by their respective bridge factories but can also be added manually for custom implementations.

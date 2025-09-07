@@ -20,12 +20,11 @@ The BundlePhobia Bridge retrieves bundle size information for NPM packages using
 
 ```php
 use PackApi\Bridge\BundlePhobia\BundlePhobiaProviderFactory;
-use PackApi\Http\SymfonyHttpClientFactory;
+use PackApi\Http\HttpClientFactory;
 
-$httpFactory = new SymfonyHttpClientFactory();
-$httpClient = $httpFactory->createClient();
+$httpFactory = new HttpClientFactory();
 
-$factory = new BundlePhobiaProviderFactory($httpClient);
+$factory = new BundlePhobiaProviderFactory($httpFactory);
 
 // Available provider interfaces
 $interfaces = $factory->provides();

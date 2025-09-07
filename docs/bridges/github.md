@@ -24,18 +24,10 @@ The GitHub Bridge provides comprehensive integration with GitHub's REST API to a
 ## 🔧 **Configuration**
 
 ### **Authentication**
-GitHub API requires authentication for higher rate limits and private repositories:
+GitHub API supports authentication for higher rate limits and private repositories. Provide a token via environment and pass it to the factory:
 
 ```php
-// Environment variable (recommended)
 $_ENV['GITHUB_TOKEN'] = 'ghp_your_token_here';
-
-// Or configure directly
-$config = new Configuration([
-    'github' => [
-        'token' => 'ghp_your_token_here'
-    ]
-]);
 ```
 
 ### **Rate Limiting**
@@ -54,21 +46,12 @@ $factory = new GitHubProviderFactory($httpClient, $config);
 ```php
 use PackApi\Bridge\GitHub\GitHubProviderFactory;
 use PackApi\Http\HttpClientFactory;
-use PackApi\Config\Configuration;
 
 $httpFactory = new HttpClientFactory();
-$httpClient = $httpFactory->createClient();
-$config = new Configuration();
+$factory = new GitHubProviderFactory($httpFactory, $_ENV['GITHUB_TOKEN'] ?? null);
 
-$factory = new GitHubProviderFactory($httpClient, $config);
-
-// Get available provider types
-$providers = $factory->provides(); 
-// Returns: [MetadataProviderInterface::class, ActivityProviderInterface::class, ...]
-
-// Create specific providers
-$metadataProvider = $factory->create(MetadataProviderInterface::class);
-$activityProvider = $factory->create(ActivityProviderInterface::class);
+$metadataProvider = $factory->createMetadataProvider();
+$activityProvider = $factory->createActivityProvider();
 ```
 
 ---
@@ -77,15 +60,24 @@ $activityProvider = $factory->create(ActivityProviderInterface::class);
 
 ### **Repository Information**
 ```php
-$client = new GitHubApiClient($httpClient, $cache, $rateLimiter, $logger);
+use PackApi\Bridge\GitHub\GitHubApiClient;
 
-// Get repository metadata
-$repoData = $client->fetchRepository('owner', 'repo-name');
-// Returns: array with name, description, stars, forks, etc.
+$httpClient = (new HttpClientFactory())->createClient()->withOptions([
+    'base_uri' => 'https://api.github.com/',
+    'headers' => [
+        'Authorization' => $_ENV['GITHUB_TOKEN'] ? 'Bearer ' . $_ENV['GITHUB_TOKEN'] : '',
+        'Accept' => 'application/vnd.github.v3+json',
+        'User-Agent' => 'PackApi/1.0',
+    ],
+]);
 
-// Get repository content
-$content = $client->fetchRepositoryContent('owner', 'repo-name', 'path/to/file');
-// Returns: file content and metadata
+$client = new GitHubApiClient($httpClient);
+
+// Example: repository metadata
+$repo = $client->fetchRepoMetadata('owner/repo-name');
+
+// Example: repository contents
+$content = $client->fetchRepoContents('owner/repo-name', 'path/to/file');
 ```
 
 ### **Activity & Releases**
@@ -194,14 +186,7 @@ The GitHub Bridge implements intelligent caching:
 ```
 
 ### **Cache Configuration**
-```php
-$config = new Configuration([
-    'cache' => [
-        'type' => 'filesystem',
-        'directory' => '/path/to/cache'
-    ]
-]);
-```
+If you want HTTP caching, wrap the client with Symfony's `CachingHttpClient` via your own `Store` implementation and pass it through `HttpClientFactory` in your app. PackApi does not expose a separate configuration class.
 
 ---
 
@@ -277,17 +262,7 @@ https://github.com/owner/repo.git
 
 ## 🧪 **Testing**
 
-```php
-// Mock GitHub API client for testing
-$mockClient = $this->createMock(GitHubApiClient::class);
-$mockClient->method('fetchRepository')
-           ->willReturn(['name' => 'test-repo', 'description' => 'Test']);
-
-$provider = new GitHubMetadataProvider($mockClient);
-$metadata = $provider->getMetadata($package);
-
-$this->assertSame('test-repo', $metadata->name);
-```
+Use Symfony's `MockHttpClient` to simulate responses in unit tests, or mock provider classes directly. Keep tests focused on typed models and provider behavior.
 
 ---
 

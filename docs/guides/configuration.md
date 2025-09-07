@@ -1,56 +1,45 @@
 # Configuration Guide
 
-## Configuration Overview
+PackApi has no global configuration class. Configure behavior through:
 
-### Configuration Sources
-### Precedence Rules
-### Environment Variables
+- HTTP options on `HttpClientFactory` (timeouts, headers, HTTP/3)
+- Environment variables (e.g., `GITHUB_TOKEN`)
+- Your own composition of providers and inspectors
 
-## Cache Configuration
+## HTTP Client
 
-### Cache Types
-### Filesystem Cache
-### Memory Cache
-### Custom Cache Backends
+Create a Symfony HTTP client with options:
 
-## Logging Configuration
-
-### Log Levels
-### Log Destinations
-### Custom Loggers
-
-## Provider Configuration
-
-### GitHub Configuration
-### NPM Configuration
-### Packagist Configuration
-
-## Rate Limiting
-
-### Rate Limit Configuration
-### Token Bucket Algorithm
-### Custom Rate Limiters
-
-## HTTP Client Configuration
-
-### Client Options
-### Timeouts
-### SSL Configuration
+```php
+$client = (new HttpClientFactory())->createClient([
+    'timeout' => 20,
+    'enable_quic' => true,
+    'headers' => ['User-Agent' => 'PackApi/1.0'],
+]);
+```
 
 ## Authentication
 
-### GitHub Tokens
-### API Keys
-### Environment Variables
+Set a GitHub token for higher rate limits:
 
-## Advanced Configuration
+```bash
+export GITHUB_TOKEN=ghp_your_token
+```
 
-### Custom Providers
-### Provider Factories
-### Dependency Injection
+Pass it to `GitHubProviderFactory`:
 
-## Configuration Examples
+```php
+$github = new GitHubProviderFactory($httpFactory, $_ENV['GITHUB_TOKEN'] ?? null);
+```
 
-### Development Setup
-### Production Setup
-### Testing Configuration
+## Caching
+
+Enable HTTP caching at the client level using Symfony's `CachingHttpClient` with an HttpKernel `Store` in your application. PackApi does not require a separate configuration object.
+
+## Logging
+
+Provide a PSR‑3 logger to `HttpClientFactory` so providers can log outgoing requests where supported.
+
+## Composition
+
+Compose inspectors with one or more providers from the corresponding factories. Providers are tried in order until one returns data.

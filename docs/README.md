@@ -51,23 +51,35 @@ Available package analysis capabilities:
 ## 🚀 **Quick Start Example**
 
 ```php
-<?php
-
-use PackApi\Builder\PackApiBuilder;
+use PackApi\Bridge\Packagist\PackagistProviderFactory;
+use PackApi\Bridge\GitHub\GitHubProviderFactory;
+use PackApi\Bridge\JsDelivr\JsDelivrProviderFactory;
+use PackApi\Bridge\OSV\OSVProviderFactory;
+use PackApi\Http\HttpClientFactory;
+use PackApi\Inspector\{MetadataInspector, DownloadStatsInspector, ContentInspector, ActivityInspector, SecurityInspector, QualityInspector};
 use PackApi\Package\ComposerPackage;
 
-$facade = (new PackApiBuilder())
-    ->withGitHubToken($_ENV['GITHUB_TOKEN'] ?? null)
-    ->build();
+$httpFactory = new HttpClientFactory();
+$packagist = new PackagistProviderFactory($httpFactory);
+$github    = new GitHubProviderFactory($httpFactory, $_ENV['GITHUB_TOKEN'] ?? null);
+$jsdelivr  = new JsDelivrProviderFactory($httpFactory);
+$osv       = new OSVProviderFactory($httpFactory);
 
-$result = $facade->analyze(new ComposerPackage('symfony/ux-icons'));
+$metadataInspector = new MetadataInspector([
+    $packagist->createMetadataProvider(),
+    $github->createMetadataProvider(),
+]);
+$downloadsInspector = new DownloadStatsInspector([
+    $packagist->createStatsProvider(),
+    $jsdelivr->createStatsProvider(),
+]);
 
-$metadata = $result['metadata'];
-$downloads = $result['downloads'];
+$package = new ComposerPackage('symfony/maker-bundle');
+$metadata = $metadataInspector->getMetadata($package);
+$downloads = $downloadsInspector->getStats($package);
 
-echo "Package: {$metadata->getName()}\n";
-echo "Description: {$metadata->getDescription()}\n";
-echo "Downloads: " . ($downloads->get('monthly')?->getCount() ?? 'N/A') . "\n";
+echo "Package: " . ($metadata?->name ?? 'N/A') . "\n";
+echo "Downloads (monthly): " . ($downloads?->get('monthly')?->getCount() ?? 'N/A') . "\n";
 ```
 
 ---

@@ -24,12 +24,10 @@ The OSV Bridge connects PackApi to [OSV.dev](https://osv.dev/) allowing security
 - **Default Timeout**: 30 seconds
 
 ```php
-use PackApi\Bridge\OSV\OSVProviderFactory;
-use PackApi\Http\SymfonyHttpClientFactory;
+use PackApi\\Bridge\\OSV\\OSVProviderFactory;
+use PackApi\\Http\\HttpClientFactory;
 
-$httpFactory = new SymfonyHttpClientFactory();
-$httpClient = $httpFactory->createClient();
-
+$httpFactory = new HttpClientFactory();
 $factory = new OSVProviderFactory($httpFactory);
 ```
 
@@ -65,13 +63,6 @@ $result = $client->queryVulnerabilities('npm', 'lodash');
 
 // Query for a specific version
 $result = $client->queryVulnerabilities('Packagist', 'symfony/console', '6.3.0');
-
-// Batch query
-$packages = [
-    ['ecosystem' => 'npm', 'name' => 'react', 'version' => '18.2.0'],
-    ['ecosystem' => 'Packagist', 'name' => 'laravel/framework'],
-];
-$batch = $client->batchQueryVulnerabilities($packages);
 
 // Get vulnerability details by ID
 $details = $client->getVulnerabilityById('OSV-2023-1234');

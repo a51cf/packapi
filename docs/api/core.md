@@ -8,9 +8,9 @@
 
 ## Configuration
 
-### Constructor
-### Properties
-### Methods
+There is no global configuration class. Configure behavior via:
+- HTTP options passed to `HttpClientFactory`
+- Environment variables (e.g., `GITHUB_TOKEN`)
 
 ## Package Classes
 
@@ -20,7 +20,7 @@
 
 ## HTTP Client Factory
 
-### SymfonyHttpClientFactory
+### HttpClientFactory
 ### Interface Definition
 ### Configuration Options
 

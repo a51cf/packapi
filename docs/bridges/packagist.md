@@ -38,9 +38,9 @@ No strict limits are published, but you should throttle high volume usage.
 
 ```php
 use PackApi\Bridge\Packagist\PackagistProviderFactory;
-use PackApi\Http\SymfonyHttpClientFactory;
+use PackApi\Http\HttpClientFactory;
 
-$httpFactory = new SymfonyHttpClientFactory();
+$httpFactory = new HttpClientFactory();
 $factory = new PackagistProviderFactory($httpFactory);
 
 $metadataProvider = $factory->createMetadataProvider();
@@ -97,14 +97,7 @@ Downloads the distribution archive of the latest version using `SecureFileHandle
 Packagist responses can be cached via your HTTP client. The library does not impose a specific cache layer.
 
 ### **Cache Configuration**
-```php
-$config = new Configuration([
-    'cache' => [
-        'type' => 'filesystem',
-        'directory' => '/tmp/packapi-cache'
-    ]
-]);
-```
+Enable HTTP caching at the client level in your application if desired. PackApi does not require a separate configuration class.
 
 ---
 
