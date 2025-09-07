@@ -64,19 +64,15 @@ final class GitHubContentProvider implements ContentProviderInterface
             $fileCount = count($files);
             $totalSize = array_sum(array_map(fn ($f) => $f->getSize(), $files));
 
-            // Use the pre-computed flags from the API client
             $hasReadme = $filesData['has_readme'] ?? false;
             $hasLicense = $filesData['has_license'] ?? false;
             $hasSecurityPolicy = $filesData['has_security_policy'] ?? false;
 
-            // Check for test files in the file list
             $hasTests = (bool) array_filter($files, fn ($f) => preg_match('/(test|spec)/i', $f->getPath()));
 
-            // Check for git files
             $hasGitattributes = (bool) array_filter($files, fn ($f) => '.gitattributes' === $f->getPath());
             $hasGitignore = (bool) array_filter($files, fn ($f) => '.gitignore' === $f->getPath());
 
-            // Find files that might be ignored/test/example files
             $ignoredFiles = array_values(array_filter(
                 array_map(fn ($f) => $f->getPath(), $files),
                 fn ($name) => preg_match('/(example|demo|sample|docs|test|spec)/i', $name)
@@ -93,8 +89,8 @@ final class GitHubContentProvider implements ContentProviderInterface
                 hasGitattributes: $hasGitattributes,
                 hasGitignore: $hasGitignore
             );
-        } catch (\Exception $e) {
-            return null; // Return null on any error
+        } catch (\Exception) {
+            return null;
         }
     }
 }

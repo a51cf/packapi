@@ -24,7 +24,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 final class GitHubApiClient
 {
     public function __construct(
-        private readonly HttpClientInterface $httpClient, // This is now a scoped client
+        private readonly HttpClientInterface $httpClient,
     ) {
     }
 
@@ -34,7 +34,6 @@ final class GitHubApiClient
             return null;
         }
 
-        // Handle different GitHub URL formats
         $patterns = [
             '/github\.com[\/:]([^\/]+)\/([^\/\.]+)(?:\.git)?(?:\/.*)?$/i',
             '/^([^\/]+)\/([^\/]+)$/', // owner/repo format
@@ -49,6 +48,9 @@ final class GitHubApiClient
         return null;
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     public function fetchRepoMetadata(string $repoName): ?array
     {
         if (!$this->validateRepoName($repoName)) {
@@ -61,12 +63,15 @@ final class GitHubApiClient
             return $response;
         } catch (ApiException $e) {
             if (404 === $e->httpCode) {
-                return null; // Repository not found
+                return null;
             }
             throw $e;
         }
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     public function fetchRepoActivity(string $repoName): ?array
     {
         if (!$this->validateRepoName($repoName)) {
@@ -74,27 +79,38 @@ final class GitHubApiClient
         }
 
         try {
-            // Get basic stats from repository endpoint
             $repoData = $this->fetchRepoMetadata($repoName);
             if (!$repoData) {
                 return null;
             }
 
-            // Get recent commits (last 100)
+            /** @var list<array<string, mixed>> $commits */
             $commits = $this->makeRequest('GET', "/repos/{$repoName}/commits", [
                 'per_page' => 100,
                 'since' => date('c', strtotime('-1 year')),
             ]);
 
-            // Get contributors
+            /** @var list<array<string, mixed>> $contributors */
             $contributors = $this->makeRequest('GET', "/repos/{$repoName}/contributors", [
                 'per_page' => 50,
             ]);
 
-            // Get releases
+            /** @var list<array<string, mixed>> $releases */
             $releases = $this->makeRequest('GET', "/repos/{$repoName}/releases", [
                 'per_page' => 10,
             ]);
+
+            $lastCommitDate = null;
+            if (count($commits) > 0) {
+                $firstCommit = $commits[0];
+                $lastCommitDate = $firstCommit['commit']['committer']['date'] ?? null;
+            }
+
+            $lastReleaseDate = null;
+            if (count($releases) > 0) {
+                $firstRelease = $releases[0];
+                $lastReleaseDate = $firstRelease['published_at'] ?? null;
+            }
 
             return [
                 'repository' => $repoData,
@@ -105,8 +121,8 @@ final class GitHubApiClient
                     'commit_count_last_year' => count($commits),
                     'contributor_count' => count($contributors),
                     'release_count' => count($releases),
-                    'last_commit_date' => $commits[0]['commit']['committer']['date'] ?? null,
-                    'last_release_date' => $releases[0]['published_at'] ?? null,
+                    'last_commit_date' => $lastCommitDate,
+                    'last_release_date' => $lastReleaseDate,
                 ],
             ];
         } catch (ApiException $e) {
@@ -117,6 +133,9 @@ final class GitHubApiClient
         }
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     public function fetchSecurityAdvisories(string $repoName): ?array
     {
         if (!$this->validateRepoName($repoName)) {
@@ -124,13 +143,11 @@ final class GitHubApiClient
         }
 
         try {
-            // Get security advisories for the repository
             $advisories = $this->makeRequest('GET', "/repos/{$repoName}/security-advisories", [
                 'state' => 'published',
                 'per_page' => 100,
             ]);
 
-            // Get Dependabot alerts (requires special permissions)
             $vulnerabilityAlerts = null;
             try {
                 $vulnerabilityAlerts = $this->makeRequest('GET', "/repos/{$repoName}/vulnerability-alerts");
@@ -155,6 +172,9 @@ final class GitHubApiClient
         }
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     public function fetchRepoFiles(string $repoName): ?array
     {
         if (!$this->validateRepoName($repoName)) {
@@ -162,7 +182,6 @@ final class GitHubApiClient
         }
 
         try {
-            // Get default branch info first
             $repoData = $this->fetchRepoMetadata($repoName);
             if (!$repoData) {
                 return null;
@@ -170,12 +189,10 @@ final class GitHubApiClient
 
             $defaultBranch = $repoData['default_branch'] ?? 'main';
 
-            // Get repository contents (root level)
             $contents = $this->makeRequest('GET', "/repos/{$repoName}/contents", [
                 'ref' => $defaultBranch,
             ]);
 
-            // Get specific important files
             $importantFiles = [];
             $filesToCheck = ['README.md', 'LICENSE', 'SECURITY.md', 'composer.json', 'package.json'];
 
@@ -189,7 +206,6 @@ final class GitHubApiClient
                     if (404 !== $e->httpCode) {
                         throw $e;
                     }
-                    // File doesn't exist, continue
                 }
             }
 
@@ -210,6 +226,9 @@ final class GitHubApiClient
         }
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     public function fetchRepoContents(string $repoName, string $path = ''): ?array
     {
         if (!$this->validateRepoName($repoName)) {
@@ -222,7 +241,7 @@ final class GitHubApiClient
             return $this->makeRequest('GET', $endpoint);
         } catch (ApiException $e) {
             if (404 === $e->httpCode) {
-                return null; // Not found
+                return null;
             }
             throw $e;
         }
@@ -239,6 +258,9 @@ final class GitHubApiClient
         return base64_decode($fileData['content'], true);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function searchRepositories(string $query, int $limit = 30, ?string $sort = null, ?string $order = null): array
     {
         $params = [
@@ -256,7 +278,6 @@ final class GitHubApiClient
         try {
             return $this->makeRequest('GET', '/search/repositories', $params);
         } catch (ApiException $e) {
-            // Handle specific API errors if needed, e.g., rate limiting
             throw $e;
         }
     }
@@ -280,17 +301,20 @@ final class GitHubApiClient
         return (bool) preg_match('/^[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+$/', $repoName);
     }
 
+    /**
+     * @param array<string, scalar> $params
+     *
+     * @return array<string, mixed>
+     */
     private function makeRequest(string $method, string $endpoint, array $params = []): array
     {
         $options = [];
 
-        // Add query parameters for GET requests
         if ('GET' === $method && !empty($params)) {
             $options['query'] = $params;
         }
 
         try {
-            // The base URI and headers are already set by the scoped client
             $response = $this->httpClient->request($method, $endpoint, $options);
             $statusCode = $response->getStatusCode();
 

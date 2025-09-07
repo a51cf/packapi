@@ -29,7 +29,6 @@ final class HttpClientFactoryTest extends TestCase
 
         $ref = new \ReflectionObject($client);
         $prop = $ref->getProperty('defaultOptions');
-        $prop->setAccessible(true);
 
         $options = $prop->getValue($client);
         $this->assertArrayHasKey('http_version', $options);
@@ -44,7 +43,6 @@ final class HttpClientFactoryTest extends TestCase
 
         $ref = new \ReflectionObject($client);
         $prop = $ref->getProperty('defaultOptions');
-        $prop->setAccessible(true);
 
         $options = $prop->getValue($client);
         $this->assertArrayHasKey('http_version', $options);

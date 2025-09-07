@@ -33,7 +33,7 @@ final class GitHubMetadataProviderTest extends TestCase
                 'description' => 'desc',
                 'license' => ['name' => 'MIT'],
                 'html_url' => 'https://github.com/owner/repo',
-            ])),
+            ], JSON_THROW_ON_ERROR)),
         ];
         $client = new GitHubApiClient(new MockHttpClient($responses));
 
@@ -48,5 +48,18 @@ final class GitHubMetadataProviderTest extends TestCase
         $this->assertSame('desc', $metadata->description);
         $this->assertSame('MIT', $metadata->license);
         $this->assertSame('https://github.com/owner/repo', $metadata->repository);
+    }
+
+    public function testSupportsReturnTrueForGitHubRepositories(): void
+    {
+        $client = new GitHubApiClient(new MockHttpClient());
+        $provider = new GitHubMetadataProvider($client);
+        $package = new ComposerPackage('owner/repo');
+
+        $package->setRepositoryUrl('https://example.com/owner/repo');
+        $this->assertFalse($provider->supports($package));
+
+        $package->setRepositoryUrl('https://github.com/owner/repo');
+        $this->assertTrue($provider->supports($package));
     }
 }

@@ -47,13 +47,11 @@ final class NpmPackage extends Package
                 throw new ValidationException('Invalid NPM scoped package name format. Must be @scope/package-name with lowercase letters, numbers, hyphens, underscores, and dots only');
             }
         } else {
-            // Regular package name validation
             if (!preg_match('/^[a-z0-9-_.]+$/', $name)) {
                 throw new ValidationException('Invalid NPM package name format. Must contain only lowercase letters, numbers, hyphens, underscores, and dots');
             }
         }
 
-        // Additional checks for invalid names
         if (str_contains($name, '..')) {
             throw new ValidationException('NPM package name cannot contain consecutive dots');
         }

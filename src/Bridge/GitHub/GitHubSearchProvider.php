@@ -21,6 +21,9 @@ final class GitHubSearchProvider implements PackageSearchInterface
     {
     }
 
+    /**
+     * @return array<int, array{identifier: string, name: string, description?: string|null, repository?: string|null}>
+     */
     public function search(string $query, int $limit = 20): array
     {
         $data = $this->client->searchRepositories($query, $limit);
@@ -38,11 +41,17 @@ final class GitHubSearchProvider implements PackageSearchInterface
         return $results;
     }
 
+    /**
+     * @return array<int, array{identifier: string, name: string, description?: string|null, repository?: string|null}>
+     */
     public function searchByKeyword(string $keyword): array
     {
         return $this->search($keyword);
     }
 
+    /**
+     * @return array<int, array{identifier: string, name: string, description?: string|null, repository?: string|null}>
+     */
     public function getPopular(int $limit = 50): array
     {
         // GitHub API does not have a direct 'popular' endpoint.

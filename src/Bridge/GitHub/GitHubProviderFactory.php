@@ -25,7 +25,6 @@ final class GitHubProviderFactory
         ?string $token = null,
     ) {
         $mainClient = $httpClientFactory->createClient();
-        // Use provided token, or none
         $authHeader = $token ? "Bearer {$token}" : '';
         $scopedClient = $mainClient->withOptions([
             'base_uri' => 'https://api.github.com/',

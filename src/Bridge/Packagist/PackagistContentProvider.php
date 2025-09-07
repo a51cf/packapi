@@ -18,19 +18,18 @@ use PackApi\Model\ContentOverview;
 use PackApi\Model\File;
 use PackApi\Package\Package;
 use PackApi\Provider\ContentProviderInterface;
-use PackApi\Security\SecureFileHandler;
+use PackApi\Security\SecureFileHandlerInterface;
 
 final class PackagistContentProvider implements ContentProviderInterface
 {
     public function __construct(
         private readonly PackagistApiClient $client,
-        private readonly SecureFileHandler $fileHandler,
+        private readonly SecureFileHandlerInterface $fileHandler,
     ) {
     }
 
     public function supports(Package $package): bool
     {
-        // Only support Composer packages for now
         return $package->getIdentifier() && str_contains($package->getIdentifier(), '/');
     }
 
@@ -40,7 +39,7 @@ final class PackagistContentProvider implements ContentProviderInterface
         if (empty($data['package']['versions'])) {
             return null;
         }
-        // Find the latest stable version
+
         $versions = $data['package']['versions'];
         uksort($versions, 'version_compare');
         $latest = end($versions);
@@ -50,19 +49,15 @@ final class PackagistContentProvider implements ContentProviderInterface
         try {
             $distUrl = $latest['dist']['url'];
 
-            // Securely download the tarball
             $tarPath = $this->fileHandler->downloadSafely($distUrl);
 
-            // Create secure extraction directory
-            $tmp = sys_get_temp_dir().'/packapi_'.uniqid();
-            if (!mkdir($tmp, 0755, true)) {
+            $tmp = sys_get_temp_dir().'/packapi_'.uniqid('', true);
+            if (!mkdir($tmp, 0755, true) && !is_dir($tmp)) {
                 throw new ValidationException('Cannot create extraction directory');
             }
 
-            // Securely extract the archive
             $extractedFiles = $this->fileHandler->extractSafely($tarPath, $tmp);
 
-            // Scan files safely
             $files = [];
             $rii = new \RecursiveIteratorIterator(
                 new \RecursiveDirectoryIterator($tmp, \RecursiveDirectoryIterator::SKIP_DOTS)
@@ -72,7 +67,6 @@ final class PackagistContentProvider implements ContentProviderInterface
                 if ($file->isFile()) {
                     $relPath = ltrim(str_replace($tmp, '', $file->getPathname()), '/\\');
 
-                    // Validate file path for security
                     if (!$this->fileHandler->validatePath($relPath)) {
                         continue;
                     }
@@ -85,10 +79,9 @@ final class PackagistContentProvider implements ContentProviderInterface
                     );
                 }
             }
-        } catch (ValidationException $e) {
-            return null; // Return null for validation errors instead of throwing
+        } catch (ValidationException) {
+            return null;
         } finally {
-            // Ensure cleanup happens even if extraction fails
             if (isset($tarPath) && file_exists($tarPath)) {
                 unlink($tarPath);
             }

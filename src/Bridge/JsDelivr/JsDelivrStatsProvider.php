@@ -20,7 +20,7 @@ use PackApi\Provider\DownloadStatsProviderInterface;
 
 final class JsDelivrStatsProvider implements DownloadStatsProviderInterface
 {
-    public function __construct(private JsDelivrApiClient $client)
+    public function __construct(private readonly JsDelivrApiClient $client)
     {
     }
 
@@ -45,21 +45,22 @@ final class JsDelivrStatsProvider implements DownloadStatsProviderInterface
         return new DownloadStats(['monthly' => $period]);
     }
 
-    public function getStatsForPeriod(Package $package, $period): ?DownloadStats
+    public function getStatsForPeriod(Package $package, DownloadPeriod $period): ?DownloadStats
     {
         // jsDelivr API does not support custom period stats, so return null
         return null;
     }
 
+    /**
+     * @return list<string>
+     */
     public function getAvailablePeriods(Package $package): array
     {
-        // jsDelivr only provides monthly stats in this implementation
         return ['monthly'];
     }
 
     public function hasCdnStats(Package $package): bool
     {
-        // jsDelivr provides CDN stats for npm and composer packages
         $id = $package->getIdentifier();
 
         return str_starts_with($id, 'npm/') || str_starts_with($id, 'composer/');

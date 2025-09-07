@@ -26,7 +26,6 @@ final class JsDelivrContentProvider implements ContentProviderInterface
 
     public function supports(Package $package): bool
     {
-        // Support NPM and Composer packages (jsDelivr supports both)
         $id = $package->getIdentifier();
 
         return str_starts_with($id, 'npm/') || str_starts_with($id, 'composer/');

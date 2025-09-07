@@ -15,7 +15,6 @@ namespace PackApi\System\Npm;
 
 use PackApi\Bridge\Npm\NpmApiClient;
 use PackApi\Model\ContentOverview;
-use PackApi\Model\File;
 use PackApi\Package\NpmPackage;
 use PackApi\Package\Package;
 use PackApi\Provider\ContentProviderInterface;
@@ -39,7 +38,6 @@ final class NpmContentProvider implements ContentProviderInterface
             return null;
         }
 
-        // Extract file information from NPM package data
         $files = [];
         $fileCount = 0;
         $totalSize = 0;
@@ -49,7 +47,6 @@ final class NpmContentProvider implements ContentProviderInterface
         $hasGitignore = false;
         $hasGitattributes = false;
 
-        // Check if package has files information
         if (isset($data['dist']) && isset($data['dist']['fileCount'])) {
             $fileCount = (int) $data['dist']['fileCount'];
         }
@@ -58,7 +55,6 @@ final class NpmContentProvider implements ContentProviderInterface
             $totalSize = (int) $data['dist']['unpackedSize'];
         }
 
-        // Check for common files based on NPM package structure
         if (isset($data['readme']) && !empty($data['readme'])) {
             $hasReadme = true;
         }
@@ -67,7 +63,6 @@ final class NpmContentProvider implements ContentProviderInterface
             $hasLicense = true;
         }
 
-        // Check scripts for test indicators
         if (isset($data['scripts']) && is_array($data['scripts'])) {
             $hasTests = isset($data['scripts']['test'])
                        || isset($data['scripts']['jest'])
@@ -77,7 +72,6 @@ final class NpmContentProvider implements ContentProviderInterface
                        || isset($data['scripts']['ava']);
         }
 
-        // Check devDependencies for test frameworks
         if (!$hasTests && isset($data['devDependencies']) && is_array($data['devDependencies'])) {
             $testFrameworks = ['jest', 'mocha', 'jasmine', 'karma', 'ava', 'tape', 'tap'];
             foreach ($testFrameworks as $framework) {

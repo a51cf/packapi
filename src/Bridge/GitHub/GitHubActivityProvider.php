@@ -72,8 +72,8 @@ final class GitHubActivityProvider implements ActivityProviderInterface
                 openIssues: $repository['open_issues_count'] ?? 0,
                 lastRelease: $stats['last_release_date'] ?? null,
             );
-        } catch (\Exception $e) {
-            return null; // Return null on any error
+        } catch (\Exception) {
+            return null;
         }
     }
 }

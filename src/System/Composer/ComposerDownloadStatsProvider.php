@@ -78,7 +78,7 @@ final class ComposerDownloadStatsProvider implements DownloadStatsProviderInterf
             $period->start,
             $period->end,
         );
-        if (empty($data['downloads']) || !is_array($data['downloads'])) {
+        if (!is_array($data['downloads'] ?? null)) {
             return null;
         }
         $count = 0;

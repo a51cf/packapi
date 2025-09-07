@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace PackApi\Tests\Bridge\Packagist;
 
 use PackApi\Bridge\GitHub\GitHubApiClient;
-use PackApi\Bridge\Packagist\PackagistApiClient;
 use PackApi\Bridge\Packagist\PackagistSecurityProvider;
 use PackApi\Model\SecurityAdvisory;
 use PackApi\Package\ComposerPackage;
@@ -28,7 +27,6 @@ use Symfony\Contracts\HttpClient\ResponseStreamInterface;
 #[CoversClass(PackagistSecurityProvider::class)]
 final class PackagistSecurityProviderTest extends TestCase
 {
-    private PackagistApiClient $apiClient;
     private GitHubApiClient $github;
     private PackagistSecurityProvider $provider;
 
@@ -95,7 +93,6 @@ final class PackagistSecurityProviderTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->apiClient = new PackagistApiClient($this->getStubClient());
         $this->github = new GitHubApiClient($this->getStubClient());
         $this->provider = new PackagistSecurityProvider($this->github);
     }

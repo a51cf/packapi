@@ -20,7 +20,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 final class JsDelivrApiClient
 {
     public function __construct(
-        private readonly HttpClientInterface $httpClient, // This is now a scoped client
+        private readonly HttpClientInterface $httpClient,
     ) {
     }
 
@@ -28,6 +28,8 @@ final class JsDelivrApiClient
      * Fetch jsDelivr package metadata (e.g. for npm or composer).
      *
      * @param string $packageName e.g. "npm/lodash" or "gh/symfony/symfony"
+     *
+     * @return array<string, mixed>|null
      */
     public function fetchPackageMeta(string $packageName): ?array
     {
@@ -38,7 +40,7 @@ final class JsDelivrApiClient
             $statusCode = $response->getStatusCode();
 
             if (404 === $statusCode) {
-                return null; // Package not found
+                return null;
             }
 
             if (200 !== $statusCode) {
@@ -58,6 +60,8 @@ final class JsDelivrApiClient
      *
      * @param string      $packageName e.g. "npm/lodash"
      * @param string|null $version     e.g. "4.17.21" or null for latest
+     *
+     * @return array<string, mixed>|null
      */
     public function fetchFileList(string $packageName, ?string $version = null): ?array
     {
@@ -70,7 +74,7 @@ final class JsDelivrApiClient
             $statusCode = $response->getStatusCode();
 
             if (404 === $statusCode) {
-                return null; // Package/version not found
+                return null;
             }
 
             if (200 !== $statusCode) {

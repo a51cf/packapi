@@ -40,8 +40,7 @@ final class BundlePhobiaSizeProvider implements BundleSizeProviderInterface
             }
 
             return $this->createBundleSizeFromData($data);
-        } catch (\Exception $e) {
-            // Log error but don't throw - bundle analysis should be non-blocking
+        } catch (\Exception) {
             return null;
         }
     }
@@ -56,14 +55,15 @@ final class BundlePhobiaSizeProvider implements BundleSizeProviderInterface
             }
 
             return $this->createBundleSizeFromData($data);
-        } catch (\Exception $e) {
-            // Log error but don't throw - bundle analysis should be non-blocking
+        } catch (\Exception) {
             return null;
         }
     }
 
     /**
      * Get package history showing size evolution over versions.
+     *
+     * @return array<string, mixed>|null
      */
     public function getPackageHistory(Package $package): ?array
     {
@@ -78,6 +78,9 @@ final class BundlePhobiaSizeProvider implements BundleSizeProviderInterface
         }
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     private function createBundleSizeFromData(array $data): BundleSize
     {
         return new BundleSize(

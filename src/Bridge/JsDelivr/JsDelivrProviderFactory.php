@@ -25,7 +25,6 @@ final class JsDelivrProviderFactory
     {
         $mainClient = $httpClientFactory->createClient();
 
-        // Create a client scoped to the jsDelivr API
         $this->scopedClient = $mainClient->withOptions([
             'base_uri' => 'https://data.jsdelivr.com/',
             'headers' => [

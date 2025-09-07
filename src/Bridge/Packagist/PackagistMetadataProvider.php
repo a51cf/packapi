@@ -25,7 +25,6 @@ final class PackagistMetadataProvider implements MetadataProviderInterface
 
     public function supports(Package $package): bool
     {
-        // Only support Composer packages for now
         return $package->getIdentifier() && str_contains($package->getIdentifier(), '/');
     }
 

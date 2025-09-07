@@ -14,8 +14,8 @@ declare(strict_types=1);
 namespace PackApi\Http;
 
 use PackApi\Http\Middleware\LoggingMiddleware;
-use Psr\Cache\CacheItemPoolInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpClient\CachingHttpClient;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -24,9 +24,12 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  */
 final class HttpClientFactory implements HttpClientFactoryInterface
 {
+    /**
+     * @param object|null $cacheStore Store implementation from symfony/http-kernel (StoreInterface)
+     */
     public function __construct(
         private readonly ?LoggerInterface $logger = null,
-        private readonly ?CacheItemPoolInterface $cachePool = null,
+        private readonly ?object $cacheStore = null,
     ) {
     }
 
@@ -36,21 +39,17 @@ final class HttpClientFactory implements HttpClientFactoryInterface
 
         if (!empty($options['enable_quic'])) {
             $httpOptions['http_version'] = '3';
-            // Remove the custom option before passing to HttpClient
             unset($options['enable_quic']);
         }
 
-        // Merge any additional options (after removing custom ones)
         $httpOptions = array_merge($httpOptions, $options);
 
         $client = HttpClient::create($httpOptions);
 
-        // Decorate with caching if available
-        if ($this->cachePool && class_exists(\Symfony\Component\HttpClient\CachingHttpClient::class)) {
-            $client = new \Symfony\Component\HttpClient\CachingHttpClient($client, $this->cachePool);
+        if ($this->cacheStore && class_exists(CachingHttpClient::class)) {
+            $client = new CachingHttpClient($client, $this->cacheStore);
         }
 
-        // Decorate with logging last to see the final request
         if ($this->logger) {
             $client = new LoggingMiddleware($client, $this->logger);
         }

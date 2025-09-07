@@ -78,7 +78,10 @@ final class JsDelivrStatsProviderTest extends TestCase
     public function testGetStatsForPeriodReturnsNull(): void
     {
         $provider = new JsDelivrStatsProvider(new JsDelivrApiClient(new MockHttpClient()));
-        $this->assertNull($provider->getStatsForPeriod($this->makePackage('npm/pkg'), 'daily'));
+        $start = new \DateTimeImmutable('-7 days');
+        $end = new \DateTimeImmutable();
+        $period = new \PackApi\Model\DownloadPeriod('daily', 0, $start, $end);
+        $this->assertNull($provider->getStatsForPeriod($this->makePackage('npm/pkg'), $period));
     }
 
     public function testHasCdnStats(): void

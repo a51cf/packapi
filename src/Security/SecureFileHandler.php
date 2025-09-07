@@ -17,7 +17,7 @@ use PackApi\Exception\ValidationException;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
-final class SecureFileHandler
+final class SecureFileHandler implements SecureFileHandlerInterface
 {
     public const int MAX_FILE_SIZE = 104857600; // 100MB
     public const array ALLOWED_EXTENSIONS = ['tar', 'gz', 'zip', 'json', 'txt', 'md'];
@@ -34,12 +34,10 @@ final class SecureFileHandler
 
     public function downloadSafely(string $url, int $maxSize = self::MAX_FILE_SIZE): string
     {
-        // Validate URL
         if (!filter_var($url, FILTER_VALIDATE_URL) || !in_array(parse_url($url, PHP_URL_SCHEME), ['http', 'https'], true)) {
             throw new ValidationException("Invalid URL provided: {$url}");
         }
 
-        // Create secure temporary directory
         $tmpDir = $this->createSecureTempDir();
         $tmpFile = $tmpDir.'/download_'.uniqid('', true);
 
@@ -52,13 +50,11 @@ final class SecureFileHandler
                 ],
             ]);
 
-            // Check content type
             $contentType = $response->getHeaders()['content-type'][0] ?? '';
             if (!$this->isAllowedContentType($contentType)) {
                 throw new ValidationException("Disallowed content type: {$contentType}");
             }
 
-            // Stream content with size limit
             $handle = fopen($tmpFile, 'w');
             if (!$handle) {
                 throw new ValidationException('Cannot create temporary file');
@@ -94,15 +90,13 @@ final class SecureFileHandler
             throw new ValidationException("Archive file does not exist: {$archivePath}");
         }
 
-        // Validate file size
         $fileSize = filesize($archivePath);
         if ($fileSize > self::MAX_FILE_SIZE) {
             throw new ValidationException("Archive size {$fileSize} exceeds maximum allowed size");
         }
 
-        // Create secure destination directory
         if (!is_dir($destination)) {
-            if (!mkdir($destination, 0755, true)) {
+            if (!mkdir($destination, 0755, true) && !is_dir($destination)) {
                 throw new ValidationException("Cannot create destination directory: {$destination}");
             }
         }
@@ -110,7 +104,6 @@ final class SecureFileHandler
         $extractedFiles = [];
 
         try {
-            // Handle different archive types
             if (str_ends_with($archivePath, '.tar.gz') || str_ends_with($archivePath, '.tgz')) {
                 $phar = new \PharData($archivePath);
                 $phar->decompress();
@@ -142,10 +135,8 @@ final class SecureFileHandler
 
     public function validatePath(string $path): bool
     {
-        // Check for directory traversal attempts
         $normalizedPath = realpath($path) ?: $path;
 
-        // Reject paths containing dangerous patterns
         $dangerousPatterns = [
             '..',
             '/..',
@@ -166,8 +157,8 @@ final class SecureFileHandler
 
     private function createSecureTempDir(): string
     {
-        $tmpDir = $this->tempDir.'/packapi_'.uniqid();
-        if (!mkdir($tmpDir, 0755, true)) {
+        $tmpDir = $this->tempDir.'/packapi_'.uniqid('', true);
+        if (!mkdir($tmpDir, 0755, true) && !is_dir($tmpDir)) {
             throw new ValidationException("Cannot create temporary directory: {$tmpDir}");
         }
 
@@ -189,6 +180,9 @@ final class SecureFileHandler
         return in_array($contentType, $allowedTypes, true) || str_starts_with($contentType, 'application/');
     }
 
+    /**
+     * @return list<string>
+     */
     private function extractPharSafely(\PharData $phar, string $destination): array
     {
         $extractedFiles = [];
@@ -202,15 +196,13 @@ final class SecureFileHandler
 
             $filePath = $file->getFilename();
 
-            // Validate file path for security
             if (!$this->validatePath($filePath)) {
                 throw new ValidationException("Dangerous file path detected: {$filePath}");
             }
 
-            // Check file extension
             $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
             if ($extension && !in_array($extension, self::ALLOWED_EXTENSIONS, true)) {
-                continue; // Skip disallowed files
+                continue;
             }
 
             $extractedFiles[] = $filePath;
@@ -221,6 +213,9 @@ final class SecureFileHandler
         return $extractedFiles;
     }
 
+    /**
+     * @return list<string>
+     */
     private function extractZipSafely(\ZipArchive $zip, string $destination): array
     {
         $extractedFiles = [];

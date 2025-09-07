@@ -26,6 +26,9 @@ final class LoggingMiddleware implements HttpClientInterface
     ) {
     }
 
+    /**
+     * @param array<string, mixed> $options
+     */
     public function request(string $method, string $url, array $options = []): ResponseInterface
     {
         $this->logger->info(
@@ -49,6 +52,9 @@ final class LoggingMiddleware implements HttpClientInterface
         return $this->client->stream($responses, $timeout);
     }
 
+    /**
+     * @param array<string, mixed> $options
+     */
     public function withOptions(array $options): static
     {
         return new self($this->client->withOptions($options), $this->logger);

@@ -28,7 +28,6 @@ final class GitHubStatisticProvider implements DownloadStatsProviderInterface
 
     public function supports(Package $package): bool
     {
-        // Support packages that have GitHub repository URLs
         $repository = $package->getRepositoryUrl();
         if (!$repository) {
             return false;
@@ -87,11 +86,14 @@ final class GitHubStatisticProvider implements DownloadStatsProviderInterface
             return new DownloadStats([
                 $period->getType() => $computedPeriod,
             ]);
-        } catch (ValidationException $e) {
-            return null; // Invalid repository name
+        } catch (ValidationException) {
+            return null;
         }
     }
 
+    /**
+     * @return list<string>
+     */
     public function getAvailablePeriods(Package $package): array
     {
         return ['total', 'monthly']; // GitHub provides limited time-based stats

@@ -52,4 +52,34 @@ final class GitHubSearchProviderTest extends TestCase
             ],
         ], $result);
     }
+
+    public function testSearchByKeywordDelegatesToSearchAndMapsResults(): void
+    {
+        $responses = [
+            new MockResponse(json_encode([
+                'items' => [
+                    [
+                        'full_name' => 'foo/bar',
+                        'name' => 'bar',
+                        'description' => 'library',
+                        'html_url' => 'https://github.com/foo/bar',
+                    ],
+                ],
+            ])),
+        ];
+
+        $api = new GitHubApiClient(new MockHttpClient($responses));
+        $provider = new GitHubSearchProvider($api);
+
+        $result = $provider->searchByKeyword('php');
+
+        $this->assertSame([
+            [
+                'identifier' => 'foo/bar',
+                'name' => 'bar',
+                'description' => 'library',
+                'repository' => 'https://github.com/foo/bar',
+            ],
+        ], $result);
+    }
 }

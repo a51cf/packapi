@@ -20,19 +20,20 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 class BundlePhobiaApiClient
 {
     public function __construct(
-        private readonly HttpClientInterface $httpClient, // This is now a scoped client
+        private readonly HttpClientInterface $httpClient,
     ) {
     }
 
     /**
      * Get bundle size information for a package.
+     *
+     * @return array<string, mixed>|null
      */
     public function getBundleSize(string $packageName, ?string $version = null): ?array
     {
         $packageParam = $version ? $packageName.'@'.$version : $packageName;
 
         try {
-            // The base URI and headers are already set by the scoped client
             $response = $this->httpClient->request('GET', 'api/size', [
                 'query' => ['package' => $packageParam],
             ]);
@@ -40,7 +41,7 @@ class BundlePhobiaApiClient
             $statusCode = $response->getStatusCode();
 
             if (404 === $statusCode) {
-                return null; // Package not found
+                return null;
             }
 
             if (200 !== $statusCode) {
@@ -55,11 +56,12 @@ class BundlePhobiaApiClient
 
     /**
      * Get detailed history information for a package.
+     *
+     * @return array<string, mixed>|null
      */
     public function getPackageHistory(string $packageName): ?array
     {
         try {
-            // The base URI and headers are already set by the scoped client
             $response = $this->httpClient->request('GET', 'api/package-history', [
                 'query' => ['package' => $packageName],
             ]);
@@ -67,7 +69,7 @@ class BundlePhobiaApiClient
             $statusCode = $response->getStatusCode();
 
             if (404 === $statusCode) {
-                return null; // Package not found
+                return null;
             }
 
             if (200 !== $statusCode) {

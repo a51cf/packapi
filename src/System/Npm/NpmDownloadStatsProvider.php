@@ -33,10 +33,9 @@ final class NpmDownloadStatsProvider implements DownloadStatsProviderInterface
 
     public function getStats(Package $package): ?DownloadStats
     {
-        // Create a default monthly period
         $period = new DownloadPeriod(
             'monthly',
-            0, // count will be filled from API
+            0,
             new \DateTimeImmutable('-1 month'),
             new \DateTimeImmutable()
         );
@@ -52,7 +51,6 @@ final class NpmDownloadStatsProvider implements DownloadStatsProviderInterface
             return null;
         }
 
-        // Create a new period with the actual count from API
         $actualPeriod = new DownloadPeriod(
             $period->getType(),
             $stats['downloads'] ?? 0,
@@ -63,6 +61,9 @@ final class NpmDownloadStatsProvider implements DownloadStatsProviderInterface
         return new DownloadStats([$period->getType() => $actualPeriod]);
     }
 
+    /**
+     * @return list<string>
+     */
     public function getAvailablePeriods(Package $package): array
     {
         // NPM registry typically supports these periods

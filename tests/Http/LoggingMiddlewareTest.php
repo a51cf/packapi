@@ -76,7 +76,6 @@ final class LoggingMiddlewareTest extends TestCase
 
         $refClient = new \ReflectionObject($client);
         $prop = $refClient->getProperty('requestArgs');
-        $prop->setAccessible(true);
         $this->assertSame(['GET', 'https://example.com/test', []], $prop->getValue($client));
         $this->assertSame($response, $result);
     }
@@ -92,6 +91,7 @@ final class LoggingMiddlewareTest extends TestCase
 
         // request delegation
         $result = $middleware->request('POST', '/foo', ['bar' => 1]);
+        \assert(property_exists($client, 'requestArgs'));
         $this->assertSame(['POST', '/foo', ['bar' => 1]], $client->requestArgs);
         $this->assertSame($response, $result);
 
@@ -99,7 +99,6 @@ final class LoggingMiddlewareTest extends TestCase
         $streamRes = $middleware->stream([$response], 5.0);
         $refClient = new \ReflectionObject($client);
         $prop = $refClient->getProperty('streamArgs');
-        $prop->setAccessible(true);
         $this->assertSame([[$response], 5.0], $prop->getValue($client));
         $this->assertSame($stream, $streamRes);
 
@@ -108,16 +107,13 @@ final class LoggingMiddlewareTest extends TestCase
         $this->assertNotSame($middleware, $new);
         $refClient = new \ReflectionObject($client);
         $prop = $refClient->getProperty('withOptionsArgs');
-        $prop->setAccessible(true);
         $this->assertSame(['timeout' => 10], $prop->getValue($client));
 
         // check that new middleware wraps the new client instance
         $ref = new \ReflectionObject($new);
         $prop = $ref->getProperty('client');
-        $prop->setAccessible(true);
         $refClient = new \ReflectionObject($client);
         $withRetProp = $refClient->getProperty('withOptionsReturn');
-        $withRetProp->setAccessible(true);
         $this->assertSame($withRetProp->getValue($client), $prop->getValue($new));
     }
 }

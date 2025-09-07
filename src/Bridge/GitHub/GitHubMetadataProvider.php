@@ -27,7 +27,6 @@ final class GitHubMetadataProvider implements MetadataProviderInterface
 
     public function supports(Package $package): bool
     {
-        // Support packages that have GitHub repository URLs
         $repository = $package->getRepositoryUrl();
         if (!$repository) {
             return false;
@@ -60,8 +59,8 @@ final class GitHubMetadataProvider implements MetadataProviderInterface
                 license: $repoData['license']['name'] ?? null,
                 repository: $repoData['html_url'] ?? $repository,
             );
-        } catch (ValidationException $e) {
-            return null; // Invalid repository name
+        } catch (ValidationException) {
+            return null;
         }
     }
 }

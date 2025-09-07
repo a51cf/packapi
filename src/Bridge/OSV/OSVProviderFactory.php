@@ -26,7 +26,6 @@ final class OSVProviderFactory
     {
         $mainClient = $httpClientFactory->createClient();
 
-        // Create a client scoped to the OSV API
         $this->scopedClient = $mainClient->withOptions([
             'base_uri' => 'https://api.osv.dev/',
             'headers' => [
@@ -40,6 +39,9 @@ final class OSVProviderFactory
         $this->apiClient = new OSVApiClient($this->scopedClient);
     }
 
+    /**
+     * @return list<class-string>
+     */
     public function provides(): array
     {
         return [

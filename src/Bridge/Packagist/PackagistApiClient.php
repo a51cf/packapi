@@ -18,13 +18,15 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 final class PackagistApiClient
 {
     public function __construct(
-        private readonly HttpClientInterface $httpClient, // This is now a scoped client
+        private readonly HttpClientInterface $httpClient,
     ) {
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function fetchPackage(string $packageName): array
     {
-        // The base URI is already set. Just use the relative path.
         $response = $this->httpClient->request('GET', "packages/{$packageName}.json");
         $content = $response->getContent(false);
 
@@ -47,6 +49,9 @@ final class PackagistApiClient
         return $content ? json_decode($content, true, 512, JSON_THROW_ON_ERROR) : [];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function searchPackages(string $query, int $limit = 20): array
     {
         $response = $this->httpClient->request('GET', 'search.json', [

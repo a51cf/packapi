@@ -42,7 +42,6 @@ final class JsDelivrProviderFactoryTest extends TestCase
         $this->assertInstanceOf(JsDelivrContentProvider::class, $factory->createContentProvider());
 
         $ref = new \ReflectionProperty($factory, 'apiClient');
-        $ref->setAccessible(true);
         $this->assertInstanceOf(JsDelivrApiClient::class, $ref->getValue($factory));
     }
 }

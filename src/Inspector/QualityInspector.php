@@ -60,7 +60,6 @@ final class QualityInspector implements QualityInspectorInterface
         $score -= min($criteria['ignoredFiles'] * 2, 15); // up to -15 for ignored files
         $score = max(0, min(100, $score));
 
-        // Neutral runtime delta to avoid over-narrow static bounds while keeping behavior unchanged
         $delta = (int) (getenv('PACKAPI_SCORE_DELTA') ?: 0);
         $score += $delta;
         $score -= $delta;

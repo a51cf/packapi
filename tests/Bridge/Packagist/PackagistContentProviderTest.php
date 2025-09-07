@@ -18,6 +18,7 @@ use PackApi\Bridge\Packagist\PackagistContentProvider;
 use PackApi\Package\ComposerPackage;
 use PackApi\Package\NpmPackage;
 use PackApi\Security\SecureFileHandler;
+use PackApi\Security\SecureFileHandlerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -125,5 +126,108 @@ final class PackagistContentProviderTest extends TestCase
         $provider = new PackagistContentProvider($client, new SecureFileHandler($this->getStubClient()));
 
         $this->assertNull($provider->getContentOverview($package));
+    }
+
+    public function testGetContentOverviewReturnsNullWhenNoVersions(): void
+    {
+        $package = new ComposerPackage('vendor/package');
+        $apiData = [
+            'package' => [
+                'versions' => [],
+            ],
+        ];
+
+        $client = new PackagistApiClient($this->getStubClient([
+            'GET packages/vendor/package.json' => [200, $apiData],
+        ]));
+        $provider = new PackagistContentProvider($client, new SecureFileHandler($this->getStubClient()));
+
+        $this->assertNull($provider->getContentOverview($package));
+    }
+
+    public function testGetContentOverviewReturnsNullOnInvalidDistUrl(): void
+    {
+        $package = new ComposerPackage('vendor/package');
+        $apiData = [
+            'package' => [
+                'versions' => [
+                    '1.0.0' => [
+                        'version' => '1.0.0',
+                        'dist' => ['url' => 'file:///not/allowed/archive.zip'],
+                    ],
+                ],
+            ],
+        ];
+
+        $client = new PackagistApiClient($this->getStubClient([
+            'GET packages/vendor/package.json' => [200, $apiData],
+        ]));
+        $provider = new PackagistContentProvider($client, new SecureFileHandler($this->getStubClient()));
+
+        $this->assertNull($provider->getContentOverview($package));
+    }
+
+    public function testGetContentOverviewSuccessBuildsOverview(): void
+    {
+        $package = new ComposerPackage('vendor/package');
+        $apiData = [
+            'package' => [
+                'versions' => [
+                    '1.0.0' => [
+                        'version' => '1.0.0',
+                        'dist' => ['url' => 'https://example.org/archive.zip'],
+                    ],
+                ],
+            ],
+        ];
+
+        $client = new PackagistApiClient($this->getStubClient([
+            'GET packages/vendor/package.json' => [200, $apiData],
+        ]));
+
+        /** @var SecureFileHandlerInterface&\PHPUnit\Framework\MockObject\MockObject $fileHandler */
+        $fileHandler = $this->createMock(SecureFileHandlerInterface::class);
+        $fileHandler
+            ->expects($this->once())
+            ->method('downloadSafely')
+            ->with('https://example.org/archive.zip')
+            ->willReturn(sys_get_temp_dir().'/fake_archive.zip');
+
+        $fileHandler
+            ->expects($this->once())
+            ->method('extractSafely')
+            ->willReturnCallback(function (string $archivePath, string $destination): array {
+                @mkdir($destination.'/tests', 0777, true);
+                @mkdir($destination.'/docs', 0777, true);
+                file_put_contents($destination.'/README.md', 'readme');
+                file_put_contents($destination.'/LICENSE', 'license');
+                file_put_contents($destination.'/.gitignore', 'ignored');
+                file_put_contents($destination.'/.gitattributes', 'attrs');
+                file_put_contents($destination.'/tests/ExampleTest.php', 'tests');
+                file_put_contents($destination.'/docs/guide.md', 'docs');
+
+                return ['README.md', 'LICENSE', '.gitignore', '.gitattributes', 'tests/ExampleTest.php', 'docs/guide.md'];
+            });
+
+        $fileHandler
+            ->method('validatePath')
+            ->willReturn(true);
+
+        $provider = new PackagistContentProvider($client, $fileHandler);
+
+        $overview = $provider->getContentOverview($package);
+
+        $this->assertNotNull($overview);
+        $this->assertSame(6, $overview->fileCount);
+        $this->assertSame(34, $overview->totalSize); // sum of file sizes written above
+        $this->assertTrue($overview->hasReadme);
+        $this->assertTrue($overview->hasLicense);
+        $this->assertTrue($overview->hasTests);
+        $this->assertTrue($overview->hasGitignore);
+        $this->assertTrue($overview->hasGitattributes);
+
+        $ignored = $overview->ignoredFiles;
+        $this->assertContains('tests/ExampleTest.php', $ignored);
+        $this->assertContains('docs/guide.md', $ignored);
     }
 }

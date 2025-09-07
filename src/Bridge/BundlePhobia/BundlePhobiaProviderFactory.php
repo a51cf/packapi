@@ -26,7 +26,6 @@ final class BundlePhobiaProviderFactory
     {
         $mainClient = $httpClientFactory->createClient();
 
-        // Create a client scoped to the BundlePhobia API
         $this->scopedClient = $mainClient->withOptions([
             'base_uri' => 'https://bundlephobia.com/',
             'headers' => [
@@ -39,6 +38,9 @@ final class BundlePhobiaProviderFactory
         $this->apiClient = new BundlePhobiaApiClient($this->scopedClient);
     }
 
+    /**
+     * @return list<class-string>
+     */
     public function provides(): array
     {
         return [

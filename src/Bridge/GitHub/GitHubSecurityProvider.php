@@ -30,6 +30,9 @@ final class GitHubSecurityProvider implements SecurityProviderInterface
         return is_string($repo) && str_contains($repo, 'github.com');
     }
 
+    /**
+     * @return SecurityAdvisory[]
+     */
     public function getSecurityAdvisories(Package $package): array
     {
         $repo = $package->getRepositoryUrl();
@@ -59,8 +62,8 @@ final class GitHubSecurityProvider implements SecurityProviderInterface
                 severity: $advisory['severity'] ?? 'unknown',
                 link: $advisory['html_url'] ?? '',
             ), $advisories);
-        } catch (\Exception $e) {
-            return []; // Return empty array on any error
+        } catch (\Exception) {
+            return [];
         }
     }
 }

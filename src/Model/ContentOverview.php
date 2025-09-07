@@ -26,7 +26,7 @@ final class ContentOverview
         public readonly bool $hasTests = false,
         /** @var string[] */
         public readonly array $ignoredFiles = [],
-        public readonly array $files = [], // array of File models
+        public readonly array $files = [],
         public readonly bool $hasGitattributes = false,
         public readonly bool $hasGitignore = false,
     ) {
@@ -57,11 +57,17 @@ final class ContentOverview
         return $this->hasTests;
     }
 
+    /**
+     * @return string[]
+     */
     public function getIgnoredFiles(): array
     {
         return $this->ignoredFiles;
     }
 
+    /**
+     * @return File[]
+     */
     public function getFiles(): array
     {
         return $this->files;

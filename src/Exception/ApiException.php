@@ -15,6 +15,9 @@ namespace PackApi\Exception;
 
 class ApiException extends \RuntimeException
 {
+    /**
+     * @param array<string, mixed>|null $responseData
+     */
     public function __construct(
         string $message = '',
         int $code = 0,

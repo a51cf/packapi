@@ -32,7 +32,6 @@ final class NpmProviderFactory
     {
         $mainClient = $httpClientFactory->createClient();
 
-        // Create a client scoped to the NPM registry API
         $this->registryClient = $mainClient->withOptions([
             'base_uri' => 'https://registry.npmjs.org/',
             'headers' => [
@@ -42,7 +41,6 @@ final class NpmProviderFactory
             'timeout' => 30,
         ]);
 
-        // Create a client scoped to the NPM stats API
         $this->statsClient = $mainClient->withOptions([
             'base_uri' => 'https://api.npmjs.org/',
             'headers' => [
@@ -55,6 +53,9 @@ final class NpmProviderFactory
         $this->apiClient = new NpmApiClient($this->registryClient, $this->statsClient);
     }
 
+    /**
+     * @return list<class-string>
+     */
     public function provides(): array
     {
         return [

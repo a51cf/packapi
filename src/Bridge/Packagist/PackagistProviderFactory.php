@@ -28,7 +28,6 @@ final class PackagistProviderFactory
         $this->httpClientFactory = $httpClientFactory;
         $mainClient = $httpClientFactory->createClient();
 
-        // Create a client scoped to the Packagist API
         $this->scopedClient = $mainClient->withOptions([
             'base_uri' => 'https://packagist.org/',
             'headers' => [

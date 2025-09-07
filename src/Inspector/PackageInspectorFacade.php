@@ -28,6 +28,9 @@ final class PackageInspectorFacade
     }
 
     // Unified API
+    /**
+     * @return array<string, mixed>
+     */
     public function analyze(Package $package): array
     {
         $contentOverview = $this->contentInspector->getContentOverview($package);

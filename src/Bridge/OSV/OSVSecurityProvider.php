@@ -58,8 +58,7 @@ final class OSVSecurityProvider implements SecurityProviderInterface
             }
 
             return $advisories;
-        } catch (\Exception $e) {
-            // Log error but don't throw - security checks should be non-blocking
+        } catch (\Exception) {
             return [];
         }
     }
@@ -94,8 +93,7 @@ final class OSVSecurityProvider implements SecurityProviderInterface
             }
 
             return $advisories;
-        } catch (\Exception $e) {
-            // Log error but don't throw - security checks should be non-blocking
+        } catch (\Exception) {
             return null;
         }
     }
@@ -111,13 +109,14 @@ final class OSVSecurityProvider implements SecurityProviderInterface
 
     private function getPackageNameForOSV(Package $package): string
     {
-        // For most packages, the identifier is the correct name for OSV
         return $package->getIdentifier();
     }
 
+    /**
+     * @param array<string, mixed> $vulnerability
+     */
     private function createSecurityAdvisoryFromOSVData(array $vulnerability): ?SecurityAdvisory
     {
-        // OSV vulnerability structure
         if (!isset($vulnerability['id'])) {
             return null;
         }
@@ -125,10 +124,8 @@ final class OSVSecurityProvider implements SecurityProviderInterface
         $id = $vulnerability['id'];
         $title = $vulnerability['summary'] ?? $vulnerability['details'] ?? 'Security vulnerability';
 
-        // Extract severity from database_specific or severity field
         $severity = $this->extractSeverity($vulnerability);
 
-        // Generate link to OSV vulnerability page
         $link = 'https://osv.dev/vulnerability/'.urlencode($id);
 
         return new SecurityAdvisory(
@@ -139,13 +136,14 @@ final class OSVSecurityProvider implements SecurityProviderInterface
         );
     }
 
+    /**
+     * @param array<string, mixed> $vulnerability
+     */
     private function extractSeverity(array $vulnerability): string
     {
-        // Try to extract severity from various possible locations
-
-        // Check for CVSS severity
         if (isset($vulnerability['severity'])) {
             foreach ($vulnerability['severity'] as $severityEntry) {
+                /** @var array<string, mixed> $severityEntry */
                 if (isset($severityEntry['score'])) {
                     $score = (float) $severityEntry['score'];
 
@@ -154,18 +152,15 @@ final class OSVSecurityProvider implements SecurityProviderInterface
             }
         }
 
-        // Check database_specific for severity information
         if (isset($vulnerability['database_specific']['severity'])) {
             return strtoupper($vulnerability['database_specific']['severity']);
         }
 
-        // Check for GitHub Security Advisory severity
         if (isset($vulnerability['database_specific']['github_reviewed'])
             && isset($vulnerability['database_specific']['severity'])) {
             return strtoupper($vulnerability['database_specific']['severity']);
         }
 
-        // Default to MEDIUM if no severity information is available
         return 'MEDIUM';
     }
 
@@ -213,11 +208,14 @@ final class OSVSecurityProvider implements SecurityProviderInterface
     /**
      * Get detailed vulnerability information by ID.
      */
+    /**
+     * @return array<string, mixed>|null
+     */
     public function getVulnerabilityDetails(string $vulnId): ?array
     {
         try {
             return $this->client->getVulnerabilityById($vulnId);
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             return null;
         }
     }

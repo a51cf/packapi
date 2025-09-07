@@ -29,16 +29,16 @@ final class PackagistStatisticsProviderTest extends TestCase
 
     public function testSupportsComposerPackagesOnly(): void
     {
-        $this->markTestIncomplete('Add supports() behavior once implemented.');
+        $this->markTestSkipped('Add supports() behavior once implemented.');
     }
 
     public function testGetStatsAggregatesHistoricalDownloads(): void
     {
-        $this->markTestIncomplete('Implement getStats() using Packagist historical stats.');
+        $this->markTestSkipped('Implement getStats() using Packagist historical stats.');
     }
 
     public function testAvailablePeriods(): void
     {
-        $this->markTestIncomplete('Expose available periods after implementation.');
+        $this->markTestSkipped('Expose available periods after implementation.');
     }
 }

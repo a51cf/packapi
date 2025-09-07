@@ -36,6 +36,9 @@ final class DownloadStats
         return isset($this->periods[$key]);
     }
 
+    /**
+     * @return array<string, DownloadPeriod>
+     */
     public function getPeriods(): array
     {
         return $this->periods;

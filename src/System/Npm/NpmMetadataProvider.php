@@ -38,7 +38,6 @@ final class NpmMetadataProvider implements MetadataProviderInterface
             return null;
         }
 
-        // Handle repository URL extraction safely
         $repositoryUrl = null;
         if (isset($data['repository'])) {
             if (is_string($data['repository'])) {
@@ -48,7 +47,6 @@ final class NpmMetadataProvider implements MetadataProviderInterface
             }
         }
 
-        // Handle license field safely (can be string or object)
         $license = null;
         if (isset($data['license'])) {
             if (is_string($data['license'])) {

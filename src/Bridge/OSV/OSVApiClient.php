@@ -20,7 +20,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 class OSVApiClient
 {
     public function __construct(
-        private readonly HttpClientInterface $httpClient, // This is now a scoped client
+        private readonly HttpClientInterface $httpClient,
     ) {
     }
 
@@ -30,6 +30,9 @@ class OSVApiClient
      * @param string      $ecosystem The package ecosystem (e.g., 'npm', 'Packagist')
      * @param string      $name      The package name
      * @param string|null $version   Optional specific version to check
+     */
+    /**
+     * @return array<string, mixed>|null
      */
     public function queryVulnerabilities(string $ecosystem, string $name, ?string $version = null): ?array
     {
@@ -45,7 +48,6 @@ class OSVApiClient
         }
 
         try {
-            // The base URI and headers are already set by the scoped client
             $response = $this->httpClient->request('POST', 'v1/query', [
                 'json' => $requestBody,
             ]);
@@ -53,7 +55,7 @@ class OSVApiClient
             $statusCode = $response->getStatusCode();
 
             if (404 === $statusCode) {
-                return null; // No vulnerabilities found
+                return null;
             }
 
             if (200 !== $statusCode) {
@@ -71,16 +73,18 @@ class OSVApiClient
      *
      * @param string $id The OSV vulnerability ID
      */
+    /**
+     * @return array<string, mixed>|null
+     */
     public function getVulnerabilityById(string $id): ?array
     {
         try {
-            // The base URI and headers are already set by the scoped client
             $response = $this->httpClient->request('GET', 'v1/vulns/'.urlencode($id));
 
             $statusCode = $response->getStatusCode();
 
             if (404 === $statusCode) {
-                return null; // Vulnerability not found
+                return null;
             }
 
             if (200 !== $statusCode) {
@@ -97,6 +101,11 @@ class OSVApiClient
      * Batch query vulnerabilities for multiple packages.
      *
      * @param array $packages Array of ['ecosystem' => string, 'name' => string, 'version' => ?string]
+     */
+    /**
+     * @param array<int, array{ecosystem: string, name: string, version?: string}> $packages
+     *
+     * @return array<string, mixed>
      */
     public function batchQueryVulnerabilities(array $packages): array
     {
@@ -117,7 +126,6 @@ class OSVApiClient
         }
 
         try {
-            // The base URI and headers are already set by the scoped client
             $response = $this->httpClient->request('POST', 'v1/querybatch', [
                 'json' => ['queries' => $queries],
             ]);

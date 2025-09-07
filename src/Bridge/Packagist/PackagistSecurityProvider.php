@@ -31,6 +31,9 @@ final class PackagistSecurityProvider implements SecurityProviderInterface
         return $package->getIdentifier() && str_contains($package->getIdentifier(), '/');
     }
 
+    /**
+     * @return SecurityAdvisory[]
+     */
     public function getSecurityAdvisories(Package $package): array
     {
         $repoName = 'FriendsOfPHP/security-advisories';

@@ -39,7 +39,6 @@ final class PackagistActivityProvider implements ActivityProviderInterface
         $lastRelease = null;
         $lastReleaseTime = null;
         if ($versions) {
-            // Find the latest release by date
             $latest = null;
             foreach ($versions as $ver) {
                 if (isset($ver['time']) && (null === $latest || $ver['time'] > $latest['time'])) {
@@ -51,10 +50,8 @@ final class PackagistActivityProvider implements ActivityProviderInterface
                 $lastReleaseTime = isset($latest['time']) ? new \DateTimeImmutable($latest['time']) : null;
             }
         }
-        // Use lastReleaseTime as lastCommit if available, fallback to package time
         $lastCommit = $lastReleaseTime ?? (isset($info['time']) ? new \DateTimeImmutable($info['time']) : null);
 
-        // Packagist does not provide contributors or open issues directly
         return new ActivitySummary(
             lastCommit: $lastCommit,
             contributors: 0,

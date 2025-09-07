@@ -17,6 +17,6 @@ final class ComposerPackage extends Package
 {
     public function __construct(string $name)
     {
-        parent::__construct($name, $name); // identifier is the same for Composer
+        parent::__construct($name, $name);
     }
 }

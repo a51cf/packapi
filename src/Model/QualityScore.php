@@ -15,6 +15,9 @@ namespace PackApi\Model;
 
 final class QualityScore
 {
+    /**
+     * @param array<string, mixed> $criteria e.g. ['hasReadme' => true, ...]
+     */
     public function __construct(
         public readonly int $score, // 0-100
         public readonly array $criteria = [], // e.g. ['hasReadme' => true, ...]
@@ -28,6 +31,9 @@ final class QualityScore
         return $this->score;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getCriteria(): array
     {
         return $this->criteria;

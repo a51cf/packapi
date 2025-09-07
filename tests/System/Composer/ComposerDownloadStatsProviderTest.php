@@ -64,6 +64,16 @@ class ComposerDownloadStatsProviderTest extends TestCase
         $client = new PackagistApiClient($httpClient);
         $provider = new ComposerDownloadStatsProvider($client);
         $package = new ComposerPackage('foo/bar');
+
         $this->assertNull($provider->getStats($package));
+    }
+
+    public function testHasCdnStats(): void
+    {
+        $client = new PackagistApiClient($this->createMock(HttpClientInterface::class));
+        $provider = new ComposerDownloadStatsProvider($client);
+        $package = new ComposerPackage('foo/bar');
+
+        $this->assertFalse($provider->hasCdnStats($package));
     }
 }

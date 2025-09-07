@@ -25,7 +25,6 @@ final class JsDelivrMetadataProvider implements MetadataProviderInterface
 
     public function supports(Package $package): bool
     {
-        // Support NPM and Composer packages for jsDelivr
         $id = $package->getIdentifier();
 
         return str_starts_with($id, 'npm/') || str_starts_with($id, 'composer/');

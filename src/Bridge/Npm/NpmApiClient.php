@@ -25,6 +25,9 @@ class NpmApiClient
     ) {
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     public function fetchPackageInfo(string $name): ?array
     {
         try {
@@ -34,7 +37,7 @@ class NpmApiClient
             $statusCode = $response->getStatusCode();
 
             if (404 === $statusCode) {
-                return null; // Package not found
+                return null;
             }
 
             if (200 !== $statusCode) {
@@ -47,6 +50,9 @@ class NpmApiClient
         }
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     public function fetchDownloadStats(string $name, string $period = 'last-month'): ?array
     {
         try {
@@ -56,7 +62,7 @@ class NpmApiClient
             $statusCode = $response->getStatusCode();
 
             if (404 === $statusCode) {
-                return null; // Stats not found
+                return null;
             }
 
             if (200 !== $statusCode) {
