@@ -1,0 +1,27 @@
+<?php
+
+declare(strict_types=1);
+
+/*
+ * This file is part of the smnandre/packapi package.
+ *
+ * (c) Simon Andre <smn.andre@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace PackApi\Inspector;
+
+use PackApi\Model\SecurityAdvisory;
+use PackApi\Package\Package;
+
+interface SecurityInspectorInterface
+{
+    /**
+     * Get security advisories for the given package from the first supporting provider.
+     *
+     * @return SecurityAdvisory[]|null returns null if not supported or no data available
+     */
+    public function getSecurityAdvisories(Package $package): ?array;
+}
