@@ -2,6 +2,7 @@
     "name": "smnandre/packapi",
     "description": "PHP library for retrieving package metadata, download statistics, security advisories, and quality metrics from Composer, NPM, GitHub, jsDelivr, and OSV databases",
     "type": "library",
+    "license": "MIT",
     "keywords": [
         "composer",
         "packagist", 
